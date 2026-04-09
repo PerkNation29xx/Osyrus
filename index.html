@@ -344,6 +344,7 @@
           <a href="PATCH_PLAN_PCI_NIST.md" target="_blank" rel="noopener">Patch Plan</a>
           <a href="app_inventory.json" target="_blank" rel="noopener">App Inventory</a>
           <a href="web_apps_inventory.json" target="_blank" rel="noopener">Web Apps</a>
+          <a href="discovered_hosts.json" target="_blank" rel="noopener">Discovered Hosts</a>
           <a href="vulnerability_report.json" target="_blank" rel="noopener">Vulnerability Report</a>
           <a href="VULN_UPGRADE_PATH_PLAN.md" target="_blank" rel="noopener">Upgrade Path Plan</a>
           <a href="scanner_nodes.json" target="_blank" rel="noopener">Scanner Nodes</a>
@@ -355,6 +356,7 @@
 
     <section class="summary" id="summary"></section>
     <section id="scanners"></section>
+    <section id="discovered"></section>
     <section id="webapps"></section>
     <section id="hosts"></section>
   </div>
@@ -363,6 +365,7 @@
     const generatedAtEl = document.getElementById('generatedAt');
     const summaryEl = document.getElementById('summary');
     const scannersEl = document.getElementById('scanners');
+    const discoveredEl = document.getElementById('discovered');
     const webappsEl = document.getElementById('webapps');
     const hostsEl = document.getElementById('hosts');
     const refreshBtn = document.getElementById('refreshBtn');
@@ -392,7 +395,7 @@
       };
     }
 
-    function renderSummary(hosts, vulnSummary, scannerData, webData) {
+    function renderSummary(hosts, vulnSummary, scannerData, webData, discoveredData) {
       const totals = hosts.reduce((acc, host) => {
         const c = host.counts || {};
         acc.hosts += 1;
@@ -433,6 +436,14 @@
         items.push(
           { label: 'Web URLs', value: shortNum(webData.total || 0) },
           { label: 'Reachable URLs', value: shortNum(webData.reachable || 0) }
+        );
+      }
+      if (discoveredData && Array.isArray(discoveredData.hosts)) {
+        const discoveredTotal = discoveredData.totals?.discovered_up_count ?? discoveredData.hosts.length;
+        const unmanagedTotal = discoveredData.hosts.filter((item) => item.in_inventory !== true).length;
+        items.push(
+          { label: 'Discovered Hosts', value: shortNum(discoveredTotal) },
+          { label: 'Unmanaged Hosts', value: shortNum(unmanagedTotal) }
         );
       }
 
@@ -584,6 +595,7 @@
           <td>${esc(node.last_scan_status || '-')}</td>
           <td>${fmtPct(node.last_remediation_percent || 0)}</td>
           <td>${shortNum(node.last_target_count || 0)}</td>
+          <td>${shortNum(node.last_discovered_count || 0)}</td>
           <td>${esc(node.last_scan_completed || '-')}</td>
         </tr>
       `;
@@ -599,7 +611,7 @@
         <table>
           <thead>
             <tr>
-              <th>Node</th><th>IP</th><th>Status</th><th>Role</th><th>Schedule</th><th>Last Scan</th><th>Remediated</th><th>Targets</th><th>Completed</th>
+              <th>Node</th><th>IP</th><th>Status</th><th>Role</th><th>Schedule</th><th>Last Scan</th><th>Remediated</th><th>Targets</th><th>Discovered</th><th>Completed</th>
             </tr>
           </thead>
           <tbody>${scannerData.nodes.map(scannerRow).join('')}</tbody>
@@ -616,6 +628,52 @@
           </div>
           <div class="host-body">
             <div class="panel"><h3>Scanner Fleet</h3>${nodeTable}</div>
+          </div>
+        </article>
+      `;
+    }
+
+    function discoveredHostRow(item) {
+      const known = item.in_inventory === true;
+      return `
+        <tr>
+          <td>${esc(item.ip || '-')}</td>
+          <td><span class="chip ${known ? 'status-up' : 'status-down'}">${known ? 'yes' : 'no'}</span></td>
+        </tr>
+      `;
+    }
+
+    function renderDiscoveredHosts(discoveredData) {
+      if (!discoveredData || !Array.isArray(discoveredData.hosts)) {
+        discoveredEl.innerHTML = '';
+        return;
+      }
+
+      const rows = discoveredData.hosts.map(discoveredHostRow).join('');
+      const discoveryCidrs = Array.isArray(discoveredData.discovery_cidrs) && discoveredData.discovery_cidrs.length
+        ? discoveredData.discovery_cidrs.join(', ')
+        : 'none';
+      const discoveredTotal = discoveredData.totals?.discovered_up_count ?? discoveredData.hosts.length;
+      const unmanagedTotal = discoveredData.hosts.filter((item) => item.in_inventory !== true).length;
+
+      discoveredEl.innerHTML = `
+        <article class="card host">
+          <div class="host-head">
+            <h2 class="host-title">Discovered Network Hosts</h2>
+            <div class="chips">
+              <span class="chip">Discovery ${discoveredData.discovery_enabled ? 'enabled' : 'disabled'}</span>
+              <span class="chip">CIDRs ${esc(discoveryCidrs)}</span>
+              <span class="chip">Discovered ${shortNum(discoveredTotal)}</span>
+              <span class="chip">Unmanaged ${shortNum(unmanagedTotal)}</span>
+            </div>
+          </div>
+          <div class="host-body">
+            <div class="panel">
+              <h3>Live Hosts Found</h3>
+              ${rows
+                ? `<table><thead><tr><th>IP</th><th>In Inventory</th></tr></thead><tbody>${rows}</tbody></table>`
+                : '<p class="empty">No hosts discovered in the configured CIDRs.</p>'}
+            </div>
           </div>
         </article>
       `;
@@ -740,11 +798,12 @@
     async function loadInventory() {
       refreshBtn.disabled = true;
       try {
-        const [inventoryResponse, vulnResponse, scannerResponse, webResponse] = await Promise.all([
+        const [inventoryResponse, vulnResponse, scannerResponse, webResponse, discoveredResponse] = await Promise.all([
           fetch(`inventory.json?ts=${Date.now()}`),
           fetch(`vulnerability_report.json?ts=${Date.now()}`).catch(() => null),
           fetch(`scanner_nodes.json?ts=${Date.now()}`).catch(() => null),
-          fetch(`web_apps_inventory.json?ts=${Date.now()}`).catch(() => null)
+          fetch(`web_apps_inventory.json?ts=${Date.now()}`).catch(() => null),
+          fetch(`discovered_hosts.json?ts=${Date.now()}`).catch(() => null)
         ]);
 
         if (!inventoryResponse.ok) {
@@ -755,6 +814,7 @@
         let vulnData = null;
         let scannerData = null;
         let webData = null;
+        let discoveredData = null;
         if (vulnResponse && vulnResponse.ok) {
           vulnData = await vulnResponse.json();
         }
@@ -764,22 +824,28 @@
         if (webResponse && webResponse.ok) {
           webData = await webResponse.json();
         }
+        if (discoveredResponse && discoveredResponse.ok) {
+          discoveredData = await discoveredResponse.json();
+        }
         const security = buildSecurityIndex(vulnData);
 
         const invText = `Inventory: ${new Date(data.generated_at).toLocaleString()}`;
         const vulnText = security?.generatedAt ? ` • Vulnerability: ${new Date(security.generatedAt).toLocaleString()}` : '';
         const scannerText = scannerData?.generated_at ? ` • Scanners: ${new Date(scannerData.generated_at).toLocaleString()}` : '';
         const webText = webData?.generated_at ? ` • Web URLs: ${new Date(webData.generated_at).toLocaleString()}` : '';
-        generatedAtEl.textContent = `${invText}${vulnText}${scannerText}${webText}`;
+        const discoveredText = discoveredData?.generated_at ? ` • Discovery: ${new Date(discoveredData.generated_at).toLocaleString()}` : '';
+        generatedAtEl.textContent = `${invText}${vulnText}${scannerText}${webText}${discoveredText}`;
 
-        renderSummary(data.hosts || [], security?.summary || null, scannerData, webData);
+        renderSummary(data.hosts || [], security?.summary || null, scannerData, webData, discoveredData);
         renderScanners(scannerData);
+        renderDiscoveredHosts(discoveredData);
         renderWebApps(webData);
         hostsEl.innerHTML = (data.hosts || []).map((host) => renderHost(host, security)).join('');
       } catch (error) {
         generatedAtEl.textContent = `Inventory load failed: ${error.message}`;
         summaryEl.innerHTML = '';
         scannersEl.innerHTML = '';
+        discoveredEl.innerHTML = '';
         webappsEl.innerHTML = '';
         hostsEl.innerHTML = `<pre class="error">${error.message}</pre>`;
       } finally {

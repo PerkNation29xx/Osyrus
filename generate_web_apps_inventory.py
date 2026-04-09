@@ -17,6 +17,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 INVENTORY_JSON = BASE_DIR / "inventory.json"
 OUTPUT_JSON = BASE_DIR / "web_apps_inventory.json"
+DISCOVERED_TARGETS = BASE_DIR / "reports" / "discovered_targets.txt"
 
 WEB_PORTS = [80, 81, 443, 8080, 8081, 8090, 8443, 3000, 5000, 5601, 9000]
 
@@ -35,6 +36,11 @@ def collect_ips(inventory: dict) -> list[str]:
             vip = (vm.get("guest_ip") or "").strip()
             if vip:
                 ips.add(vip)
+    if DISCOVERED_TARGETS.exists():
+        for line in DISCOVERED_TARGETS.read_text(encoding="utf-8").splitlines():
+            ip = line.strip()
+            if ip:
+                ips.add(ip)
     return sorted(ips)
 
 
