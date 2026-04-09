@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-04-09T07:18:25Z",
+  "nodes": [
+    {
+      "id": "osyrus-scan-01",
+      "name": "osyrus-scan-01",
+      "ip": "192.168.12.240",
+      "status": "online",
+      "role": "primary-vuln-scanner",
+      "schedule": "hourly",
+      "last_scan_status": "success",
+      "last_target_count": 9,
+      "last_scan_duration_seconds": 102,
+      "last_remediation_percent": 0.0,
+      "last_scan_started": "2026-04-09T07:16:43Z",
+      "last_scan_completed": "2026-04-09T07:18:25Z",
+      "engines": {
+        "nmap": "Nmap version 7.94SVN ( https://nmap.org )",
+        "vulners_script_present": true
+      },
+      "artifacts": {
+        "services_xml": "vuln_scan_services.xml",
+        "cve_xml": "vuln_scan_cve.xml"
+      }
+    }
+  ]
+}

@@ -45,6 +45,17 @@ Remediation tracking:
 - update `remediation_status.json` with CVE IDs under each asset IP in `remediated_cves`
 - refresh page to update `% remediated` in dashboard and host profile
 
+## Scanner Node (osyrus-scan-01)
+
+Scanner node artifacts are under `scanner-node/`.
+
+- `run_scan_node.sh`: fetch targets from portal inventory, run scans, push artifacts back to portal host
+- `osyrus-scanner.service` + `osyrus-scanner.timer`: scheduled scanner pipeline (hourly)
+- `install_scanner_node.sh`: helper installer for the scanner VM
+
+Portal data file:
+- `scanner_nodes.json` (displayed in Osyrus UI as **Scanning Nodes**)
+
 ## Run Portal
 ```bash
 cd "/Users/nation/Documents/New project/vmware-powercli/portal"

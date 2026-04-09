@@ -1,0 +1,22 @@
+[Unit]
+Description=Osyrus scanner node pipeline
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=devops
+Group=devops
+Environment=NODE_ID=osyrus-scan-01
+Environment=NODE_NAME=osyrus-scan-01
+Environment=NODE_ROLE=primary-vuln-scanner
+Environment=PORTAL_HOST=192.168.12.136
+Environment=PORTAL_USER=devops
+Environment=PORTAL_DIR=/home/devops/vm-portal
+Environment=WORK_DIR=/opt/osyrus-scanner
+Environment=SCHEDULE=hourly
+ExecStart=/opt/osyrus-scanner/run_scan_node.sh
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

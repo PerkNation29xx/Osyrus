@@ -1,13 +1,13 @@
 # Vulnerability Upgrade Path Plan
 
-Generated: 2026-04-09T05:39:37.387985Z
+Generated: 2026-04-09T07:19:08.261170Z
 
 This plan is based on the latest Nmap + vulners scan in this portal directory.
 
 ## vm1 (192.168.12.148)
 
-- Aggregated CVEs: **175**
-- Critical/High: **17 / 53**
+- Aggregated CVEs: **187**
+- Critical/High: **17 / 56**
 - Remediation complete: **0.0%**
 
 ### Upgrade Actions
@@ -36,10 +36,6 @@ This plan is based on the latest Nmap + vulners scan in this portal directory.
   - Current: VMware Photon OS/Linux
   - Target: Latest security-updated vCenter 7.x/8.x supported build.
   - Path: Take file-based backup snapshot, patch VCSA from VAMI, validate SSO/LDAP and extension services after reboot.
-- [P1] **vCenter PSC LDAP**
-  - Current: vcsa70.homelab.arpa
-  - Target: Patched embedded PSC/LDAP service.
-  - Path: Patch vCenter appliance and verify identity sources, LDAP replication, and certificate chain.
 
 ### Top CVEs
 

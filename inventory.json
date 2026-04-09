@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-09T04:50:45Z",
+  "generated_at": "2026-04-09T07:18:58Z",
   "hosts": [
     {
       "alias": "vm1",
@@ -26,9 +26,9 @@
           "type": "VMFS",
           "accessible": true,
           "capacity_gb": 3724,
-          "free_gb": 3123,
-          "used_gb": 601,
-          "free_tb": 3.05
+          "free_gb": 3113,
+          "used_gb": 611,
+          "free_tb": 3.04
         },
         {
           "name": "SSDDS1",
@@ -88,6 +88,18 @@
           "memory_gb": 1,
           "template": false,
           "vmx_path": "[Raid5] infra-dns-ntp-01/infra-dns-ntp-01.vmx"
+        },
+        {
+          "name": "osyrus-scan-01",
+          "power_state": "poweredOn",
+          "guest_ip": "192.168.12.240",
+          "host_name": "osyrus-scan-01",
+          "guest_os": "Ubuntu Linux (64-bit)",
+          "guest_os_version": "Ubuntu 24.04.4 LTS",
+          "num_cpu": 4,
+          "memory_gb": 8,
+          "template": false,
+          "vmx_path": "[Raid5] osyrus-scan-01/osyrus-scan-01.vmx"
         },
         {
           "name": "ubuntu",
@@ -201,8 +213,8 @@
         }
       ],
       "counts": {
-        "vm_total": 10,
-        "vm_powered_on": 9,
+        "vm_total": 11,
+        "vm_powered_on": 10,
         "vm_powered_off": 1,
         "datastore_total": 3,
         "iso_total": 7

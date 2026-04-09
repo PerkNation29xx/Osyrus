@@ -345,6 +345,7 @@
           <a href="app_inventory.json" target="_blank" rel="noopener">App Inventory</a>
           <a href="vulnerability_report.json" target="_blank" rel="noopener">Vulnerability Report</a>
           <a href="VULN_UPGRADE_PATH_PLAN.md" target="_blank" rel="noopener">Upgrade Path Plan</a>
+          <a href="scanner_nodes.json" target="_blank" rel="noopener">Scanner Nodes</a>
           <a href="RENDER_DEPLOY.md" target="_blank" rel="noopener">Render Deploy</a>
         </div>
       </div>
@@ -352,12 +353,14 @@
     </div>
 
     <section class="summary" id="summary"></section>
+    <section id="scanners"></section>
     <section id="hosts"></section>
   </div>
 
   <script>
     const generatedAtEl = document.getElementById('generatedAt');
     const summaryEl = document.getElementById('summary');
+    const scannersEl = document.getElementById('scanners');
     const hostsEl = document.getElementById('hosts');
     const refreshBtn = document.getElementById('refreshBtn');
 
@@ -386,7 +389,7 @@
       };
     }
 
-    function renderSummary(hosts, vulnSummary) {
+    function renderSummary(hosts, vulnSummary, scannerData) {
       const totals = hosts.reduce((acc, host) => {
         const c = host.counts || {};
         acc.hosts += 1;
@@ -413,6 +416,14 @@
           { label: 'Critical CVEs', value: shortNum(vulnSummary.critical || 0) },
           { label: 'High CVEs', value: shortNum(vulnSummary.high || 0) },
           { label: 'Remediated', value: fmtPct(vulnSummary.remediation_percent || 0) }
+        );
+      }
+      if (scannerData && Array.isArray(scannerData.nodes)) {
+        const totalNodes = scannerData.nodes.length;
+        const activeNodes = scannerData.nodes.filter((node) => (node.status || '').toLowerCase() === 'online').length;
+        items.push(
+          { label: 'Scanner Nodes', value: shortNum(totalNodes) },
+          { label: 'Active Scanners', value: shortNum(activeNodes) }
         );
       }
 
@@ -551,6 +562,56 @@
       `;
     }
 
+    function scannerRow(node) {
+      const isUp = (node.status || '').toLowerCase() === 'online';
+      const chipClass = isUp ? 'status-up' : 'status-down';
+      return `
+        <tr>
+          <td>${esc(node.name || node.id || '-')}</td>
+          <td>${esc(node.ip || '-')}</td>
+          <td><span class="chip ${chipClass}">${esc(node.status || 'unknown')}</span></td>
+          <td>${esc(node.role || '-')}</td>
+          <td>${esc(node.schedule || '-')}</td>
+          <td>${esc(node.last_scan_status || '-')}</td>
+          <td>${fmtPct(node.last_remediation_percent || 0)}</td>
+          <td>${shortNum(node.last_target_count || 0)}</td>
+          <td>${esc(node.last_scan_completed || '-')}</td>
+        </tr>
+      `;
+    }
+
+    function renderScanners(scannerData) {
+      if (!scannerData || !Array.isArray(scannerData.nodes) || scannerData.nodes.length === 0) {
+        scannersEl.innerHTML = '';
+        return;
+      }
+
+      const nodeTable = `
+        <table>
+          <thead>
+            <tr>
+              <th>Node</th><th>IP</th><th>Status</th><th>Role</th><th>Schedule</th><th>Last Scan</th><th>Remediated</th><th>Targets</th><th>Completed</th>
+            </tr>
+          </thead>
+          <tbody>${scannerData.nodes.map(scannerRow).join('')}</tbody>
+        </table>
+      `;
+
+      scannersEl.innerHTML = `
+        <article class="card host">
+          <div class="host-head">
+            <h2 class="host-title">Scanning Nodes</h2>
+            <div class="chips">
+              <span class="chip">Generated ${esc(scannerData.generated_at || '-')}</span>
+            </div>
+          </div>
+          <div class="host-body">
+            <div class="panel"><h3>Scanner Fleet</h3>${nodeTable}</div>
+          </div>
+        </article>
+      `;
+    }
+
     function renderHost(host, security) {
       if (host.status !== 'ok') {
         return `
@@ -619,9 +680,10 @@
     async function loadInventory() {
       refreshBtn.disabled = true;
       try {
-        const [inventoryResponse, vulnResponse] = await Promise.all([
+        const [inventoryResponse, vulnResponse, scannerResponse] = await Promise.all([
           fetch(`inventory.json?ts=${Date.now()}`),
-          fetch(`vulnerability_report.json?ts=${Date.now()}`).catch(() => null)
+          fetch(`vulnerability_report.json?ts=${Date.now()}`).catch(() => null),
+          fetch(`scanner_nodes.json?ts=${Date.now()}`).catch(() => null)
         ]);
 
         if (!inventoryResponse.ok) {
@@ -630,20 +692,27 @@
 
         const data = await inventoryResponse.json();
         let vulnData = null;
+        let scannerData = null;
         if (vulnResponse && vulnResponse.ok) {
           vulnData = await vulnResponse.json();
+        }
+        if (scannerResponse && scannerResponse.ok) {
+          scannerData = await scannerResponse.json();
         }
         const security = buildSecurityIndex(vulnData);
 
         const invText = `Inventory: ${new Date(data.generated_at).toLocaleString()}`;
         const vulnText = security?.generatedAt ? ` • Vulnerability: ${new Date(security.generatedAt).toLocaleString()}` : '';
-        generatedAtEl.textContent = `${invText}${vulnText}`;
+        const scannerText = scannerData?.generated_at ? ` • Scanners: ${new Date(scannerData.generated_at).toLocaleString()}` : '';
+        generatedAtEl.textContent = `${invText}${vulnText}${scannerText}`;
 
-        renderSummary(data.hosts || [], security?.summary || null);
+        renderSummary(data.hosts || [], security?.summary || null, scannerData);
+        renderScanners(scannerData);
         hostsEl.innerHTML = (data.hosts || []).map((host) => renderHost(host, security)).join('');
       } catch (error) {
         generatedAtEl.textContent = `Inventory load failed: ${error.message}`;
         summaryEl.innerHTML = '';
+        scannersEl.innerHTML = '';
         hostsEl.innerHTML = `<pre class="error">${error.message}</pre>`;
       } finally {
         refreshBtn.disabled = false;
