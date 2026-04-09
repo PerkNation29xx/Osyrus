@@ -343,6 +343,7 @@
         <div class="meta-links">
           <a href="PATCH_PLAN_PCI_NIST.md" target="_blank" rel="noopener">Patch Plan</a>
           <a href="app_inventory.json" target="_blank" rel="noopener">App Inventory</a>
+          <a href="web_apps_inventory.json" target="_blank" rel="noopener">Web Apps</a>
           <a href="vulnerability_report.json" target="_blank" rel="noopener">Vulnerability Report</a>
           <a href="VULN_UPGRADE_PATH_PLAN.md" target="_blank" rel="noopener">Upgrade Path Plan</a>
           <a href="scanner_nodes.json" target="_blank" rel="noopener">Scanner Nodes</a>
@@ -354,6 +355,7 @@
 
     <section class="summary" id="summary"></section>
     <section id="scanners"></section>
+    <section id="webapps"></section>
     <section id="hosts"></section>
   </div>
 
@@ -361,6 +363,7 @@
     const generatedAtEl = document.getElementById('generatedAt');
     const summaryEl = document.getElementById('summary');
     const scannersEl = document.getElementById('scanners');
+    const webappsEl = document.getElementById('webapps');
     const hostsEl = document.getElementById('hosts');
     const refreshBtn = document.getElementById('refreshBtn');
 
@@ -389,7 +392,7 @@
       };
     }
 
-    function renderSummary(hosts, vulnSummary, scannerData) {
+    function renderSummary(hosts, vulnSummary, scannerData, webData) {
       const totals = hosts.reduce((acc, host) => {
         const c = host.counts || {};
         acc.hosts += 1;
@@ -424,6 +427,12 @@
         items.push(
           { label: 'Scanner Nodes', value: shortNum(totalNodes) },
           { label: 'Active Scanners', value: shortNum(activeNodes) }
+        );
+      }
+      if (webData && Array.isArray(webData.items)) {
+        items.push(
+          { label: 'Web URLs', value: shortNum(webData.total || 0) },
+          { label: 'Reachable URLs', value: shortNum(webData.reachable || 0) }
         );
       }
 
@@ -612,6 +621,57 @@
       `;
     }
 
+    function webAppRow(item) {
+      const up = item.reachable === true;
+      const chip = up ? 'status-up' : 'status-down';
+      const assetText = (item.assets || []).map((a) => `${a.host_alias}/${a.name}`).join(', ') || '-';
+      return `
+        <tr>
+          <td><a href="${esc(item.final_url || item.url || '#')}" target="_blank" rel="noopener">${esc(item.url || '-')}</a></td>
+          <td>${esc(item.final_url || '-')}</td>
+          <td><span class="chip ${chip}">${up ? 'reachable' : 'unreachable'}</span></td>
+          <td>${shortNum(item.status || 0)}</td>
+          <td>${esc(item.title || '-')}</td>
+          <td>${esc(item.server || '-')}</td>
+          <td>${esc(assetText)}</td>
+        </tr>
+      `;
+    }
+
+    function renderWebApps(webData) {
+      if (!webData || !Array.isArray(webData.items) || webData.items.length === 0) {
+        webappsEl.innerHTML = '';
+        return;
+      }
+
+      const rows = webData.items.map(webAppRow).join('');
+      webappsEl.innerHTML = `
+        <article class="card host">
+          <div class="host-head">
+            <h2 class="host-title">Web Application URLs</h2>
+            <div class="chips">
+              <span class="chip">Total ${shortNum(webData.total || 0)}</span>
+              <span class="chip">Reachable ${shortNum(webData.reachable || 0)}</span>
+              <span class="chip">Generated ${esc(webData.generated_at || '-')}</span>
+            </div>
+          </div>
+          <div class="host-body">
+            <div class="panel">
+              <h3>Accessible URLs</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>URL</th><th>Final URL</th><th>Status</th><th>HTTP</th><th>Title</th><th>Server</th><th>Asset</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
     function renderHost(host, security) {
       if (host.status !== 'ok') {
         return `
@@ -680,10 +740,11 @@
     async function loadInventory() {
       refreshBtn.disabled = true;
       try {
-        const [inventoryResponse, vulnResponse, scannerResponse] = await Promise.all([
+        const [inventoryResponse, vulnResponse, scannerResponse, webResponse] = await Promise.all([
           fetch(`inventory.json?ts=${Date.now()}`),
           fetch(`vulnerability_report.json?ts=${Date.now()}`).catch(() => null),
-          fetch(`scanner_nodes.json?ts=${Date.now()}`).catch(() => null)
+          fetch(`scanner_nodes.json?ts=${Date.now()}`).catch(() => null),
+          fetch(`web_apps_inventory.json?ts=${Date.now()}`).catch(() => null)
         ]);
 
         if (!inventoryResponse.ok) {
@@ -693,26 +754,33 @@
         const data = await inventoryResponse.json();
         let vulnData = null;
         let scannerData = null;
+        let webData = null;
         if (vulnResponse && vulnResponse.ok) {
           vulnData = await vulnResponse.json();
         }
         if (scannerResponse && scannerResponse.ok) {
           scannerData = await scannerResponse.json();
         }
+        if (webResponse && webResponse.ok) {
+          webData = await webResponse.json();
+        }
         const security = buildSecurityIndex(vulnData);
 
         const invText = `Inventory: ${new Date(data.generated_at).toLocaleString()}`;
         const vulnText = security?.generatedAt ? ` • Vulnerability: ${new Date(security.generatedAt).toLocaleString()}` : '';
         const scannerText = scannerData?.generated_at ? ` • Scanners: ${new Date(scannerData.generated_at).toLocaleString()}` : '';
-        generatedAtEl.textContent = `${invText}${vulnText}${scannerText}`;
+        const webText = webData?.generated_at ? ` • Web URLs: ${new Date(webData.generated_at).toLocaleString()}` : '';
+        generatedAtEl.textContent = `${invText}${vulnText}${scannerText}${webText}`;
 
-        renderSummary(data.hosts || [], security?.summary || null, scannerData);
+        renderSummary(data.hosts || [], security?.summary || null, scannerData, webData);
         renderScanners(scannerData);
+        renderWebApps(webData);
         hostsEl.innerHTML = (data.hosts || []).map((host) => renderHost(host, security)).join('');
       } catch (error) {
         generatedAtEl.textContent = `Inventory load failed: ${error.message}`;
         summaryEl.innerHTML = '';
         scannersEl.innerHTML = '';
+        webappsEl.innerHTML = '';
         hostsEl.innerHTML = `<pre class="error">${error.message}</pre>`;
       } finally {
         refreshBtn.disabled = false;

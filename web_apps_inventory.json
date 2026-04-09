@@ -1,0 +1,169 @@
+{
+  "generated_at": "2026-04-09T07:24:44Z",
+  "total": 9,
+  "reachable": 9,
+  "items": [
+    {
+      "ip": "192.168.12.136",
+      "port": 8090,
+      "url": "http://192.168.12.136:8090/",
+      "reachable": true,
+      "status": 200,
+      "final_url": "http://192.168.12.136:8090/",
+      "title": "Osyrus Portal",
+      "server": "SimpleHTTP/0.6 Python/3.12.3",
+      "error": "",
+      "assets": [
+        {
+          "type": "vm",
+          "name": "infra-dns-ntp-01",
+          "host_alias": "vm1"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.12.137",
+      "port": 80,
+      "url": "http://192.168.12.137:80/",
+      "reachable": true,
+      "status": 200,
+      "final_url": "https://192.168.12.137:443/",
+      "title": "\" + ID_VC_Welcome + \"",
+      "server": "envoy",
+      "error": "",
+      "assets": [
+        {
+          "type": "vm",
+          "name": "vcsa70",
+          "host_alias": "vm1"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.12.137",
+      "port": 443,
+      "url": "https://192.168.12.137:443/",
+      "reachable": true,
+      "status": 200,
+      "final_url": "https://192.168.12.137:443/",
+      "title": "\" + ID_VC_Welcome + \"",
+      "server": "envoy",
+      "error": "",
+      "assets": [
+        {
+          "type": "vm",
+          "name": "vcsa70",
+          "host_alias": "vm1"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.12.148",
+      "port": 80,
+      "url": "http://192.168.12.148:80/",
+      "reachable": true,
+      "status": 200,
+      "final_url": "https://192.168.12.148/",
+      "title": "",
+      "server": "",
+      "error": "",
+      "assets": [
+        {
+          "type": "esxi_host",
+          "name": "vm1",
+          "host_alias": "vm1"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.12.148",
+      "port": 443,
+      "url": "https://192.168.12.148:443/",
+      "reachable": true,
+      "status": 200,
+      "final_url": "https://192.168.12.148:443/",
+      "title": "",
+      "server": "",
+      "error": "",
+      "assets": [
+        {
+          "type": "esxi_host",
+          "name": "vm1",
+          "host_alias": "vm1"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.12.217",
+      "port": 80,
+      "url": "http://192.168.12.217:80/",
+      "reachable": true,
+      "status": 200,
+      "final_url": "https://192.168.12.217:443/",
+      "title": "",
+      "server": "",
+      "error": "",
+      "assets": [
+        {
+          "type": "esxi_host",
+          "name": "vm2",
+          "host_alias": "vm2"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.12.217",
+      "port": 443,
+      "url": "https://192.168.12.217:443/",
+      "reachable": true,
+      "status": 200,
+      "final_url": "https://192.168.12.217:443/",
+      "title": "",
+      "server": "",
+      "error": "",
+      "assets": [
+        {
+          "type": "esxi_host",
+          "name": "vm2",
+          "host_alias": "vm2"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.12.96",
+      "port": 80,
+      "url": "http://192.168.12.96:80/",
+      "reachable": true,
+      "status": 200,
+      "final_url": "http://192.168.12.96:80/",
+      "title": "Apache2 Ubuntu Default Page: It works",
+      "server": "Apache/2.4.54 (Ubuntu)",
+      "error": "",
+      "assets": [
+        {
+          "type": "vm",
+          "name": "RazasUbuntu",
+          "host_alias": "vm1"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.12.96",
+      "port": 443,
+      "url": "https://192.168.12.96:443/",
+      "reachable": true,
+      "status": 200,
+      "final_url": "https://192.168.12.96:443/",
+      "title": "Admin - Iamredapple.com",
+      "server": "Apache/2.4.54 (Ubuntu)",
+      "error": "",
+      "assets": [
+        {
+          "type": "vm",
+          "name": "RazasUbuntu",
+          "host_alias": "vm1"
+        }
+      ]
+    }
+  ]
+}

@@ -13,6 +13,7 @@ Single-page dashboard for `vm1` (`192.168.12.148`) and `vm2` (`192.168.12.217`) 
 - `inventory.json`: generated inventory data used by the portal
 - `run_vulnerability_scan.sh`: runs nmap service scan + CVE enrichment on all host/VM IPs in inventory
 - `generate_vulnerability_report.py`: converts scan XML to `vulnerability_report.json` + `VULN_UPGRADE_PATH_PLAN.md`
+- `generate_web_apps_inventory.py`: discovers reachable HTTP/HTTPS app URLs and writes `web_apps_inventory.json`
 - `remediation_status.json`: manual remediation tracker (set remediated CVE IDs by host IP)
 - `index.html`: dashboard UI
 - `start_portal.sh`: refreshes inventory and starts local web server on port 8080
@@ -41,6 +42,14 @@ Outputs:
 - `vulnerability_report.json`
 - `VULN_UPGRADE_PATH_PLAN.md`
 
+Web app URL discovery:
+```bash
+cd "/Users/nation/Documents/New project/osyrus-portal"
+./generate_web_apps_inventory.py
+```
+Output:
+- `web_apps_inventory.json`
+
 Remediation tracking:
 - update `remediation_status.json` with CVE IDs under each asset IP in `remediated_cves`
 - refresh page to update `% remediated` in dashboard and host profile
@@ -55,6 +64,7 @@ Scanner node artifacts are under `scanner-node/`.
 
 Portal data file:
 - `scanner_nodes.json` (displayed in Osyrus UI as **Scanning Nodes**)
+- `web_apps_inventory.json` (displayed in Osyrus UI as **Web Application URLs**)
 
 ## Run Portal
 ```bash

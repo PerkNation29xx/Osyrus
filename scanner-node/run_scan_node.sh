@@ -18,6 +18,7 @@ SERVICES_TXT="${WORK_DIR}/reports/vuln_scan_services.txt"
 CVE_XML="${WORK_DIR}/reports/vuln_scan_cve.xml"
 CVE_TXT="${WORK_DIR}/reports/vuln_scan_cve.txt"
 SCANNER_JSON="${WORK_DIR}/scanner_nodes.json"
+WEB_APPS_JSON="${WORK_DIR}/web_apps_inventory.json"
 
 START_EPOCH="$(date -u +%s)"
 START_TS="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
@@ -66,6 +67,10 @@ rsync -av -e "ssh -o StrictHostKeyChecking=no" \
   "${CVE_XML}" \
   "${CVE_TXT}" \
   "${PORTAL_USER}@${PORTAL_HOST}:${PORTAL_DIR}/"
+
+if [[ -f "${WORK_DIR}/generate_web_apps_inventory.py" ]]; then
+  (cd "${WORK_DIR}" && python3 ./generate_web_apps_inventory.py >/dev/null 2>&1 || true)
+fi
 
 ssh -o StrictHostKeyChecking=no "${PORTAL_USER}@${PORTAL_HOST}" \
   "cd ${PORTAL_DIR} && ./generate_vulnerability_report.py >/dev/null 2>&1 || true"
@@ -130,5 +135,11 @@ mv "${SCANNER_JSON}.tmp" "${SCANNER_JSON}"
 rsync -av -e "ssh -o StrictHostKeyChecking=no" \
   "${SCANNER_JSON}" \
   "${PORTAL_USER}@${PORTAL_HOST}:${PORTAL_DIR}/"
+
+if [[ -f "${WEB_APPS_JSON}" ]]; then
+  rsync -av -e "ssh -o StrictHostKeyChecking=no" \
+    "${WEB_APPS_JSON}" \
+    "${PORTAL_USER}@${PORTAL_HOST}:${PORTAL_DIR}/"
+fi
 
 echo "Scanner run complete (${END_TS})"
