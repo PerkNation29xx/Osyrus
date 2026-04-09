@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Osyrus Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-1: #f8f5ec;
+      --bg-2: #d6ede8;
+      --ink: #1f2a2c;
+      --muted: #4c5c61;
+      --card: rgba(255, 255, 255, 0.78);
+      --line: rgba(31, 42, 44, 0.16);
+      --ok: #1b8f6f;
+      --off: #a54a2c;
+      --accent: #006c8f;
+      --shadow: 0 16px 40px rgba(0, 32, 42, 0.12);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "Space Grotesk", sans-serif;
+      background:
+        radial-gradient(circle at 12% 8%, #fff6da 0%, rgba(255, 246, 218, 0) 35%),
+        radial-gradient(circle at 100% 0%, #c7e5ff 0%, rgba(199, 229, 255, 0) 45%),
+        linear-gradient(130deg, var(--bg-1), var(--bg-2));
+      min-height: 100vh;
+      padding: 2rem 1rem 3rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: space-between;
+      align-items: end;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.85rem;
+      margin-top: 0.35rem;
+      display: block;
+    }
+
+    .meta-links {
+      margin-top: 0.45rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .meta-links a {
+      text-decoration: none;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.26rem 0.6rem;
+      font: 600 0.74rem/1 "IBM Plex Mono", monospace;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .button {
+      border: 0;
+      border-radius: 999px;
+      padding: 0.65rem 1rem;
+      font: 600 0.86rem/1 "IBM Plex Mono", monospace;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.75rem;
+      margin: 0 0 1.25rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      backdrop-filter: blur(5px);
+      box-shadow: var(--shadow);
+    }
+
+    .summary .card {
+      padding: 0.95rem 1rem;
+    }
+
+    .label {
+      margin: 0;
+      color: var(--muted);
+      font: 600 0.76rem/1 "IBM Plex Mono", monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .value {
+      margin: 0.4rem 0 0;
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .host {
+      margin-bottom: 1.25rem;
+      overflow: hidden;
+      animation: fadeIn 360ms ease both;
+    }
+
+    .host-head {
+      padding: 1rem;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(120deg, rgba(0,108,143,0.09), rgba(27,143,111,0.06));
+    }
+
+    .host-title {
+      margin: 0;
+      font-size: 1.3rem;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.28rem 0.62rem;
+      background: rgba(255, 255, 255, 0.65);
+      font: 600 0.74rem/1 "IBM Plex Mono", monospace;
+      color: var(--ink);
+    }
+
+    .status-up {
+      color: var(--ok);
+      border-color: color-mix(in srgb, var(--ok), #fff 65%);
+    }
+
+    .status-down {
+      color: var(--off);
+      border-color: color-mix(in srgb, var(--off), #fff 65%);
+    }
+
+    .host-body {
+      padding: 1rem;
+      display: grid;
+      gap: 0.9rem;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .panel h3 {
+      margin: 0;
+      padding: 0.7rem 0.85rem;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.94rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      font-family: "IBM Plex Mono", monospace;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.89rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.56rem 0.75rem;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font: 600 0.72rem/1 "IBM Plex Mono", monospace;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .mono {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.81rem;
+      word-break: break-all;
+    }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.9rem;
+    }
+
+    .empty {
+      color: var(--muted);
+      padding: 0.85rem;
+      margin: 0;
+      font-size: 0.9rem;
+    }
+
+    .error {
+      color: var(--off);
+      padding: 0.95rem;
+      border: 1px dashed color-mix(in srgb, var(--off), #fff 60%);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.65);
+      font-family: "IBM Plex Mono", monospace;
+      white-space: pre-wrap;
+      font-size: 0.8rem;
+    }
+
+    .sev {
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font: 600 0.7rem/1 "IBM Plex Mono", monospace;
+      border-radius: 999px;
+      padding: 0.26rem 0.48rem;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.62);
+      display: inline-block;
+    }
+
+    .sev-critical {
+      color: #8f1b1b;
+      border-color: color-mix(in srgb, #8f1b1b, #fff 62%);
+    }
+
+    .sev-high {
+      color: #b14c00;
+      border-color: color-mix(in srgb, #b14c00, #fff 62%);
+    }
+
+    .sev-medium {
+      color: #875f00;
+      border-color: color-mix(in srgb, #875f00, #fff 62%);
+    }
+
+    .sev-low, .sev-info {
+      color: #36548f;
+      border-color: color-mix(in srgb, #36548f, #fff 62%);
+    }
+
+    .progress {
+      margin-top: 0.5rem;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.56);
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #e06f42, #d8b61c, #1b8f6f);
+      transition: width 180ms ease;
+    }
+
+    .small {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin: 0.3rem 0 0;
+    }
+
+    @media (min-width: 900px) {
+      .grid-two {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div>
+        <h1>Osyrus Portal</h1>
+        <span class="meta" id="generatedAt">Loading inventory...</span>
+        <div class="meta-links">
+          <a href="PATCH_PLAN_PCI_NIST.md" target="_blank" rel="noopener">Patch Plan</a>
+          <a href="app_inventory.json" target="_blank" rel="noopener">App Inventory</a>
+          <a href="vulnerability_report.json" target="_blank" rel="noopener">Vulnerability Report</a>
+          <a href="VULN_UPGRADE_PATH_PLAN.md" target="_blank" rel="noopener">Upgrade Path Plan</a>
+          <a href="RENDER_DEPLOY.md" target="_blank" rel="noopener">Render Deploy</a>
+        </div>
+      </div>
+      <button class="button" id="refreshBtn" type="button">Refresh</button>
+    </div>
+
+    <section class="summary" id="summary"></section>
+    <section id="hosts"></section>
+  </div>
+
+  <script>
+    const generatedAtEl = document.getElementById('generatedAt');
+    const summaryEl = document.getElementById('summary');
+    const hostsEl = document.getElementById('hosts');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    const shortNum = (value) => new Intl.NumberFormat().format(value ?? 0);
+    const esc = (value) => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+    const fmtPct = (value) => `${Number(value ?? 0).toFixed(1)}%`;
+    const sevClass = (level) => `sev sev-${(level || 'info').toLowerCase()}`;
+
+    function buildSecurityIndex(vulnData) {
+      if (!vulnData) {
+        return null;
+      }
+
+      const byAlias = new Map();
+      const byIp = new Map();
+      for (const profile of (vulnData.host_profiles || [])) {
+        if (profile.alias) byAlias.set(profile.alias, profile);
+        if (profile.ip) byIp.set(profile.ip, profile);
+      }
+
+      return {
+        summary: vulnData.summary || null,
+        generatedAt: vulnData.generated_at || '',
+        byAlias,
+        byIp
+      };
+    }
+
+    function renderSummary(hosts, vulnSummary) {
+      const totals = hosts.reduce((acc, host) => {
+        const c = host.counts || {};
+        acc.hosts += 1;
+        acc.vms += c.vm_total || 0;
+        acc.on += c.vm_powered_on || 0;
+        acc.off += c.vm_powered_off || 0;
+        acc.datastores += c.datastore_total || 0;
+        acc.isos += c.iso_total || 0;
+        return acc;
+      }, { hosts: 0, vms: 0, on: 0, off: 0, datastores: 0, isos: 0 });
+
+      const items = [
+        { label: 'Hosts', value: shortNum(totals.hosts) },
+        { label: 'Total VMs', value: shortNum(totals.vms) },
+        { label: 'Powered On', value: shortNum(totals.on) },
+        { label: 'Powered Off', value: shortNum(totals.off) },
+        { label: 'Datastores', value: shortNum(totals.datastores) },
+        { label: 'ISO Images', value: shortNum(totals.isos) }
+      ];
+
+      if (vulnSummary) {
+        items.push(
+          { label: 'Scanned Assets', value: shortNum(vulnSummary.assets_scanned || 0) },
+          { label: 'Critical CVEs', value: shortNum(vulnSummary.critical || 0) },
+          { label: 'High CVEs', value: shortNum(vulnSummary.high || 0) },
+          { label: 'Remediated', value: fmtPct(vulnSummary.remediation_percent || 0) }
+        );
+      }
+
+      summaryEl.innerHTML = items.map((item) => `
+        <article class="card">
+          <p class="label">${esc(item.label)}</p>
+          <p class="value">${esc(item.value)}</p>
+        </article>
+      `).join('');
+    }
+
+    function vmRow(vm) {
+      const stateClass = vm.power_state === 'poweredOn' ? 'status-up' : 'status-down';
+      const hostname = vm.host_name || '-';
+      const osVersion = vm.guest_os_version || '-';
+      return `
+        <tr>
+          <td>${esc(vm.name || '')}</td>
+          <td>${esc(hostname)}</td>
+          <td><span class="chip ${stateClass}">${vm.power_state || 'unknown'}</span></td>
+          <td>${esc(vm.guest_ip || '-')}</td>
+          <td>${vm.num_cpu ?? 0}</td>
+          <td>${vm.memory_gb ?? 0} GB</td>
+          <td>${esc(vm.guest_os || '-')}</td>
+          <td>${esc(osVersion)}</td>
+        </tr>
+      `;
+    }
+
+    function dsRow(ds) {
+      return `
+        <tr>
+          <td>${esc(ds.name || '')}</td>
+          <td>${esc(ds.type || '')}</td>
+          <td>${shortNum(ds.capacity_gb)} GB</td>
+          <td>${shortNum(ds.used_gb)} GB</td>
+          <td>${shortNum(ds.free_gb)} GB (${ds.free_tb} TB)</td>
+          <td>${ds.accessible ? 'yes' : 'no'}</td>
+        </tr>
+      `;
+    }
+
+    function isoRow(iso) {
+      return `
+        <tr>
+          <td>${esc(iso.datastore || '')}</td>
+          <td class="mono">${esc(iso.file || '')}</td>
+        </tr>
+      `;
+    }
+
+    function profileAssetRow(asset) {
+      return `
+        <tr>
+          <td>${esc(asset.asset_name || asset.ip)}</td>
+          <td>${esc(asset.asset_type || '-')}</td>
+          <td>${esc(asset.ip || '-')}</td>
+          <td>${shortNum(asset.cve_total || 0)}</td>
+          <td>${shortNum(asset.critical || 0)}</td>
+          <td>${shortNum(asset.high || 0)}</td>
+          <td>${fmtPct(asset.remediation_percent || 0)}</td>
+        </tr>
+      `;
+    }
+
+    function cveRow(cve) {
+      return `
+        <tr>
+          <td><a href="${esc(cve.url || '#')}" target="_blank" rel="noopener">${esc(cve.id || '')}</a></td>
+          <td>${Number(cve.score || 0).toFixed(1)}</td>
+          <td><span class="${sevClass(cve.severity)}">${esc(cve.severity || 'info')}</span></td>
+          <td class="mono">${esc((cve.ports || []).join(', ') || '-')}</td>
+        </tr>
+      `;
+    }
+
+    function actionRow(action) {
+      return `
+        <tr>
+          <td>${esc(action.priority || '-')}</td>
+          <td>${esc(action.component || '-')}</td>
+          <td>${esc(action.current || '-')}</td>
+          <td>${esc(action.target_state || '-')}</td>
+          <td>${esc(action.action || '-')}</td>
+        </tr>
+      `;
+    }
+
+    function renderSecurityPanels(profile) {
+      if (!profile) {
+        return `
+          <div class="panel">
+            <h3>Security Profile</h3>
+            <p class="empty">No vulnerability profile for this host yet. Run <span class="mono">run_vulnerability_scan.sh</span> and refresh.</p>
+          </div>
+        `;
+      }
+
+      const summary = profile.cve_summary || {};
+      const assetsHtml = (profile.assets || []).length
+        ? `<table><thead><tr><th>Asset</th><th>Type</th><th>IP</th><th>CVEs</th><th>Critical</th><th>High</th><th>Remediated</th></tr></thead><tbody>${profile.assets.map(profileAssetRow).join('')}</tbody></table>`
+        : '<p class="empty">No scanned assets in this profile.</p>';
+
+      const cveHtml = (profile.top_cves || []).length
+        ? `<table><thead><tr><th>CVE</th><th>CVSS</th><th>Severity</th><th>Affected Ports</th></tr></thead><tbody>${profile.top_cves.slice(0, 10).map(cveRow).join('')}</tbody></table>`
+        : '<p class="empty">No CVEs in current report.</p>';
+
+      const actionHtml = (profile.upgrade_actions || []).length
+        ? `<table><thead><tr><th>Pri</th><th>Component</th><th>Current</th><th>Target</th><th>Upgrade Path</th></tr></thead><tbody>${profile.upgrade_actions.map(actionRow).join('')}</tbody></table>`
+        : '<p class="empty">No upgrade actions generated.</p>';
+
+      return `
+        <div class="grid-two">
+          <div class="panel">
+            <h3>Security Profile</h3>
+            <div style="padding: 0.85rem;">
+              <div class="chips">
+                <span class="${sevClass('critical')}">critical ${shortNum(summary.critical || 0)}</span>
+                <span class="${sevClass('high')}">high ${shortNum(summary.high || 0)}</span>
+                <span class="${sevClass('medium')}">medium ${shortNum(summary.medium || 0)}</span>
+                <span class="${sevClass('low')}">low ${shortNum(summary.low || 0)}</span>
+              </div>
+              <div class="progress">
+                <p class="label">Remediation Progress</p>
+                <div class="progress-track"><div class="progress-bar" style="width:${Math.max(0, Math.min(100, Number(profile.remediation_percent || 0)))}%;"></div></div>
+                <p class="small">${fmtPct(profile.remediation_percent || 0)} complete • ${shortNum(summary.total || 0)} CVEs tracked</p>
+              </div>
+            </div>
+          </div>
+          <div class="panel"><h3>Profile Assets</h3>${assetsHtml}</div>
+        </div>
+        <div class="grid-two">
+          <div class="panel"><h3>Top CVEs</h3>${cveHtml}</div>
+          <div class="panel"><h3>Upgrade Path</h3>${actionHtml}</div>
+        </div>
+      `;
+    }
+
+    function renderHost(host, security) {
+      if (host.status !== 'ok') {
+        return `
+          <article class="card host">
+            <div class="host-head">
+              <h2 class="host-title">${esc(host.alias)} (${esc(host.ip)})</h2>
+              <div class="chips"><span class="chip status-down">unreachable</span></div>
+            </div>
+            <div class="host-body">
+              <pre class="error">${esc(host.error || 'Unknown error')}</pre>
+            </div>
+          </article>
+        `;
+      }
+
+      const profile = security ? (security.byAlias.get(host.alias) || security.byIp.get(host.ip)) : null;
+      const counts = host.counts || {};
+      const securityHtml = renderSecurityPanels(profile);
+      const cveChip = profile ? `<span class="chip">CVEs ${shortNum(profile.cve_summary?.total || 0)}</span>` : '';
+      const remChip = profile ? `<span class="chip">Remediated ${fmtPct(profile.remediation_percent || 0)}</span>` : '';
+
+      const dsHtml = (host.datastores || []).length
+        ? `<table><thead><tr><th>Name</th><th>Type</th><th>Capacity</th><th>Used</th><th>Free</th><th>Accessible</th></tr></thead><tbody>${host.datastores.map(dsRow).join('')}</tbody></table>`
+        : '<p class="empty">No datastores found.</p>';
+
+      const vmHtml = (host.vms || []).length
+        ? `<table><thead><tr><th>VM</th><th>Hostname</th><th>Power</th><th>IP</th><th>CPU</th><th>Memory</th><th>Guest OS</th><th>OS Version</th></tr></thead><tbody>${host.vms.map(vmRow).join('')}</tbody></table>`
+        : '<p class="empty">No VMs found.</p>';
+
+      const imageHtml = (host.images || []).length
+        ? `<table><thead><tr><th>Name</th><th>Guest OS</th><th>Power</th><th>Template</th></tr></thead><tbody>${host.images.map(img => `<tr><td>${esc(img.name || '')}</td><td>${esc(img.guest_os || '-')}</td><td>${esc(img.power_state || '-')}</td><td>${img.template ? 'yes' : 'no'}</td></tr>`).join('')}</tbody></table>`
+        : '<p class="empty">No template/image-like VMs detected.</p>';
+
+      const isoHtml = (host.iso_images || []).length
+        ? `<table><thead><tr><th>Datastore</th><th>ISO</th></tr></thead><tbody>${host.iso_images.map(isoRow).join('')}</tbody></table>`
+        : '<p class="empty">No ISO files found.</p>';
+
+      return `
+        <article class="card host">
+          <div class="host-head">
+            <h2 class="host-title">${esc(host.alias)} (${esc(host.ip)})</h2>
+            <div class="chips">
+              <span class="chip status-up">reachable</span>
+              <span class="chip">${esc(host.host.version || 'n/a')} / build ${esc(host.host.build || 'n/a')}</span>
+              <span class="chip">VMs ${counts.vm_total || 0}</span>
+              <span class="chip">On ${counts.vm_powered_on || 0}</span>
+              <span class="chip">Off ${counts.vm_powered_off || 0}</span>
+              ${cveChip}
+              ${remChip}
+            </div>
+          </div>
+
+          <div class="host-body">
+            ${securityHtml}
+            <div class="panel"><h3>Datastores</h3>${dsHtml}</div>
+            <div class="panel"><h3>Virtual Machines</h3>${vmHtml}</div>
+            <div class="grid-two">
+              <div class="panel"><h3>Templates / Images</h3>${imageHtml}</div>
+              <div class="panel"><h3>ISO Files</h3>${isoHtml}</div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    async function loadInventory() {
+      refreshBtn.disabled = true;
+      try {
+        const [inventoryResponse, vulnResponse] = await Promise.all([
+          fetch(`inventory.json?ts=${Date.now()}`),
+          fetch(`vulnerability_report.json?ts=${Date.now()}`).catch(() => null)
+        ]);
+
+        if (!inventoryResponse.ok) {
+          throw new Error(`inventory.json HTTP ${inventoryResponse.status}`);
+        }
+
+        const data = await inventoryResponse.json();
+        let vulnData = null;
+        if (vulnResponse && vulnResponse.ok) {
+          vulnData = await vulnResponse.json();
+        }
+        const security = buildSecurityIndex(vulnData);
+
+        const invText = `Inventory: ${new Date(data.generated_at).toLocaleString()}`;
+        const vulnText = security?.generatedAt ? ` • Vulnerability: ${new Date(security.generatedAt).toLocaleString()}` : '';
+        generatedAtEl.textContent = `${invText}${vulnText}`;
+
+        renderSummary(data.hosts || [], security?.summary || null);
+        hostsEl.innerHTML = (data.hosts || []).map((host) => renderHost(host, security)).join('');
+      } catch (error) {
+        generatedAtEl.textContent = `Inventory load failed: ${error.message}`;
+        summaryEl.innerHTML = '';
+        hostsEl.innerHTML = `<pre class="error">${error.message}</pre>`;
+      } finally {
+        refreshBtn.disabled = false;
+      }
+    }
+
+    refreshBtn.addEventListener('click', loadInventory);
+    loadInventory();
+    setInterval(loadInventory, 60000);
+  </script>
+</body>
+</html>

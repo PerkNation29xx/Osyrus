@@ -1,0 +1,266 @@
+{
+  "generated_at": "2026-04-09T04:50:45Z",
+  "hosts": [
+    {
+      "alias": "vm1",
+      "ip": "192.168.12.148",
+      "status": "ok",
+      "host": {
+        "full_name": "VMware ESXi 7.0.3 build-21424296",
+        "name": "VMware ESXi",
+        "version": "7.0.3",
+        "build": "21424296"
+      },
+      "datastores": [
+        {
+          "name": "10K Sas Tier",
+          "type": "VMFS",
+          "accessible": true,
+          "capacity_gb": 7539,
+          "free_gb": 7197,
+          "used_gb": 341,
+          "free_tb": 7.03
+        },
+        {
+          "name": "Raid5",
+          "type": "VMFS",
+          "accessible": true,
+          "capacity_gb": 3724,
+          "free_gb": 3123,
+          "used_gb": 601,
+          "free_tb": 3.05
+        },
+        {
+          "name": "SSDDS1",
+          "type": "VMFS",
+          "accessible": true,
+          "capacity_gb": 178,
+          "free_gb": 2,
+          "used_gb": 175,
+          "free_tb": 0
+        }
+      ],
+      "vms": [
+        {
+          "name": "CentOS",
+          "power_state": "poweredOn",
+          "guest_ip": "",
+          "host_name": "",
+          "guest_os": "CentOS 7 (64-bit)",
+          "guest_os_version": "CentOS Linux 7 (Core)",
+          "num_cpu": 4,
+          "memory_gb": 4,
+          "template": false,
+          "vmx_path": "[SSDDS1] CentOS/CentOS.vmx"
+        },
+        {
+          "name": "CentOS2",
+          "power_state": "poweredOn",
+          "guest_ip": "192.168.12.89",
+          "host_name": "RedApple2",
+          "guest_os": "CentOS 7 (64-bit)",
+          "guest_os_version": "CentOS Linux 7 (Core)",
+          "num_cpu": 2,
+          "memory_gb": 8,
+          "template": false,
+          "vmx_path": "[10K Sas Tier] CentOS2/CentOS2.vmx"
+        },
+        {
+          "name": "RazasUbuntu",
+          "power_state": "poweredOn",
+          "guest_ip": "192.168.12.96",
+          "host_name": "redapple4",
+          "guest_os": "Ubuntu Linux (64-bit)",
+          "guest_os_version": "Ubuntu 22.10",
+          "num_cpu": 4,
+          "memory_gb": 64,
+          "template": false,
+          "vmx_path": "[Raid5] RazasUbuntu/RazasUbuntu.vmx"
+        },
+        {
+          "name": "infra-dns-ntp-01",
+          "power_state": "poweredOn",
+          "guest_ip": "192.168.12.136",
+          "host_name": "infra-dns-ntp-01",
+          "guest_os": "Ubuntu Linux (64-bit)",
+          "guest_os_version": "Ubuntu 24.04.4 LTS",
+          "num_cpu": 2,
+          "memory_gb": 1,
+          "template": false,
+          "vmx_path": "[Raid5] infra-dns-ntp-01/infra-dns-ntp-01.vmx"
+        },
+        {
+          "name": "ubuntu",
+          "power_state": "poweredOn",
+          "guest_ip": "192.168.12.147",
+          "host_name": "redapple3",
+          "guest_os": "Ubuntu Linux (64-bit)",
+          "guest_os_version": "Ubuntu 22.10",
+          "num_cpu": 4,
+          "memory_gb": 1,
+          "template": false,
+          "vmx_path": "[SSDDS1] ubuntu/ubuntu.vmx"
+        },
+        {
+          "name": "ubuntu24-cloud-base",
+          "power_state": "poweredOff",
+          "guest_ip": "",
+          "host_name": "",
+          "guest_os": "Ubuntu Linux (64-bit)",
+          "guest_os_version": "",
+          "num_cpu": 2,
+          "memory_gb": 1,
+          "template": false,
+          "vmx_path": "[Raid5] ubuntu24-cloud-base/ubuntu24-cloud-base.vmx"
+        },
+        {
+          "name": "ubuntu24-zt-01",
+          "power_state": "poweredOn",
+          "guest_ip": "192.168.12.236",
+          "host_name": "ubuntu24-zt-01",
+          "guest_os": "Ubuntu Linux (64-bit)",
+          "guest_os_version": "Ubuntu 24.04.4 LTS",
+          "num_cpu": 2,
+          "memory_gb": 1,
+          "template": false,
+          "vmx_path": "[Raid5] ubuntu24-zt-01/ubuntu24-zt-01.vmx"
+        },
+        {
+          "name": "vcenter",
+          "power_state": "poweredOn",
+          "guest_ip": "",
+          "host_name": "",
+          "guest_os": "Other (64-bit)",
+          "guest_os_version": "",
+          "num_cpu": 1,
+          "memory_gb": 0,
+          "template": false,
+          "vmx_path": "[10K Sas Tier] vcenter/vcenter.vmx"
+        },
+        {
+          "name": "vcsa70",
+          "power_state": "poweredOn",
+          "guest_ip": "192.168.12.137",
+          "host_name": "vcsa70.homelab.arpa",
+          "guest_os": "Other 3.x or later Linux (64-bit)",
+          "guest_os_version": "VMware Photon OS/Linux",
+          "num_cpu": 2,
+          "memory_gb": 12,
+          "template": false,
+          "vmx_path": "[Raid5] vcsa70/vcsa70.vmx"
+        },
+        {
+          "name": "win11",
+          "power_state": "poweredOn",
+          "guest_ip": "",
+          "host_name": "",
+          "guest_os": "Microsoft Windows 10 (64-bit)",
+          "guest_os_version": "",
+          "num_cpu": 4,
+          "memory_gb": 8,
+          "template": false,
+          "vmx_path": "[SSDDS1] win11/win11.vmx"
+        }
+      ],
+      "images": [
+        {
+          "name": "ubuntu24-cloud-base",
+          "guest_os": "Ubuntu Linux (64-bit)",
+          "power_state": "poweredOff",
+          "template": false
+        }
+      ],
+      "iso_images": [
+        {
+          "datastore": "10K Sas Tier",
+          "file": "CentOS-7-x86_64-Everything-2009.iso"
+        },
+        {
+          "datastore": "10K Sas Tier",
+          "file": "VMware-VCSA-all-7.0.3-22837322.iso"
+        },
+        {
+          "datastore": "10K Sas Tier",
+          "file": "ubuntu-22.10-live-server-amd64.iso"
+        },
+        {
+          "datastore": "10K Sas Tier",
+          "file": "ubuntu-24.04.4-live-server-amd64.iso"
+        },
+        {
+          "datastore": "Raid5",
+          "file": "VMware-VCSA-all-7.0.3-22837322.iso"
+        },
+        {
+          "datastore": "SSDDS1",
+          "file": "Win11_22H2_English_x64v1.iso"
+        },
+        {
+          "datastore": "SSDDS1",
+          "file": "ubuntu-22.04.2-desktop-amd64.iso"
+        }
+      ],
+      "counts": {
+        "vm_total": 10,
+        "vm_powered_on": 9,
+        "vm_powered_off": 1,
+        "datastore_total": 3,
+        "iso_total": 7
+      }
+    },
+    {
+      "alias": "vm2",
+      "ip": "192.168.12.217",
+      "status": "ok",
+      "host": {
+        "full_name": "VMware ESXi 8.0.2 build-23305546",
+        "name": "VMware ESXi",
+        "version": "8.0.2",
+        "build": "23305546"
+      },
+      "datastores": [
+        {
+          "name": "datastore1",
+          "type": "VMFS",
+          "accessible": true,
+          "capacity_gb": 1734,
+          "free_gb": 1674,
+          "used_gb": 60,
+          "free_tb": 1.64
+        }
+      ],
+      "vms": [
+        {
+          "name": "RedAppleVcenter",
+          "power_state": "poweredOn",
+          "guest_ip": "",
+          "host_name": "",
+          "guest_os": "VMware ESXi 8.0 or later",
+          "guest_os_version": "",
+          "num_cpu": 2,
+          "memory_gb": 8,
+          "template": false,
+          "vmx_path": "[datastore1] RedAppleVcenter/RedAppleVcenter.vmx"
+        }
+      ],
+      "images": [],
+      "iso_images": [
+        {
+          "datastore": "datastore1",
+          "file": "VMware-VCSA-all-8.0.2-23504390.iso"
+        },
+        {
+          "datastore": "datastore1",
+          "file": "ubuntu-24.04.4-live-server-amd64.iso"
+        }
+      ],
+      "counts": {
+        "vm_total": 1,
+        "vm_powered_on": 1,
+        "vm_powered_off": 0,
+        "datastore_total": 1,
+        "iso_total": 2
+      }
+    }
+  ]
+}

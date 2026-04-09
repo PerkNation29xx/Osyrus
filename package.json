@@ -1,0 +1,12 @@
+{
+  "name": "osyrus-public-portal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Public VM lab inventory and vulnerability dashboard",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

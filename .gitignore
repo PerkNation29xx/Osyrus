@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+logs/
+vuln_scan_*.xml
+vuln_scan_*.txt

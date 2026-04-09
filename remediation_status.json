@@ -1,0 +1,44 @@
+{
+  "assets": {
+    "192.168.12.136": {
+      "remediated_cves": [],
+      "accepted_risk_cves": [],
+      "notes": "Set remediated CVE IDs here as patching is completed."
+    },
+    "192.168.12.137": {
+      "remediated_cves": [],
+      "accepted_risk_cves": [],
+      "notes": ""
+    },
+    "192.168.12.147": {
+      "remediated_cves": [],
+      "accepted_risk_cves": [],
+      "notes": ""
+    },
+    "192.168.12.148": {
+      "remediated_cves": [],
+      "accepted_risk_cves": [],
+      "notes": ""
+    },
+    "192.168.12.217": {
+      "remediated_cves": [],
+      "accepted_risk_cves": [],
+      "notes": ""
+    },
+    "192.168.12.236": {
+      "remediated_cves": [],
+      "accepted_risk_cves": [],
+      "notes": ""
+    },
+    "192.168.12.89": {
+      "remediated_cves": [],
+      "accepted_risk_cves": [],
+      "notes": ""
+    },
+    "192.168.12.96": {
+      "remediated_cves": [],
+      "accepted_risk_cves": [],
+      "notes": ""
+    }
+  }
+}

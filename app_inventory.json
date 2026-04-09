@@ -1,0 +1,45 @@
+{
+  "generated_at": "2026-04-09T04:54:19Z",
+  "servers": [
+    {
+      "name": "CentOS2",
+      "ip": "192.168.12.89",
+      "user": "redapple2",
+      "status": "ok",
+      "raw": "HOSTNAME=RedApple2\nOS=CentOS Linux 7 (Core)\nKERNEL=3.10.0-1160.el7.x86_64\nPACKAGE_MANAGER=rpm\nBIN::openssl::openssl:Error: '--version' is an invalid command.\nPKG::openssl::openssl-1.0.2k-19.el7.x86_64\nRUNNING_SERVICES_START\nauditd.service\ncrond.service\ndbus.service\nfirewalld.service\ngetty@tty1.service\nirqbalance.service\nlvm2-lvmetad.service\nNetworkManager.service\npolkit.service\npostfix.service\nrsyslog.service\nsshd.service\nsystemd-journald.service\nsystemd-logind.service\nsystemd-udevd.service\ntuned.service\nvgauthd.service\nvmtoolsd.service\nRUNNING_SERVICES_END\n",
+      "stderr": ""
+    },
+    {
+      "name": "RazasUbuntu",
+      "ip": "192.168.12.96",
+      "user": "redapple",
+      "status": "ok",
+      "raw": "HOSTNAME=redapple4\nOS=Ubuntu 22.10\nKERNEL=5.19.0-46-generic\nPACKAGE_MANAGER=dpkg\nBIN::apache2::[Thu Apr 09 04:54:15.243560 2026] [core:warn] [pid 1983] AH00111: Config variable ${APACHE_RUN_DIR} is not defined\nBIN::mysql::mysql  Ver 8.0.36-0ubuntu0.22.04.1 for Linux on x86_64 ((Ubuntu))\nBIN::mysqld::/usr/sbin/mysqld  Ver 8.0.36-0ubuntu0.22.04.1 for Linux on x86_64 ((Ubuntu))\nBIN::python3::Python 3.10.12\nBIN::openssl::Invalid command '--version'; type \"help\" for a list.\nBIN::dnsmasq::Dnsmasq version 2.90  Copyright (c) 2000-2024 Simon Kelley\nPKG::apache2::2.4.54-2ubuntu1.2\nPKG::mysql-server::8.0.36-0ubuntu0.22.04.1\nPKG::python3::3.10.6-1\nPKG::openssl::3.0.5-2ubuntu2.3\nRUNNING_SERVICES_START\napache2.service\ncron.service\ndbus.service\ngetty@tty1.service\nirqbalance.service\nModemManager.service\nmultipathd.service\nmysql.service\nNetworkManager.service\nopen-vm-tools.service\npolkit.service\nrsyslog.service\nsnapd.service\nssh.service\nsystemd-journald.service\nsystemd-logind.service\nsystemd-networkd.service\nsystemd-resolved.service\nsystemd-timesyncd.service\nsystemd-udevd.service\nudisks2.service\nunattended-upgrades.service\nuser@1000.service\nvgauth.service\nwpa_supplicant.service\nRUNNING_SERVICES_END\n",
+      "stderr": ""
+    },
+    {
+      "name": "infra-dns-ntp-01",
+      "ip": "192.168.12.136",
+      "user": "devops",
+      "status": "ok",
+      "raw": "HOSTNAME=infra-dns-ntp-01\nOS=Ubuntu 24.04.4 LTS\nKERNEL=6.8.0-106-generic\nPACKAGE_MANAGER=dpkg\nBIN::docker::Docker version 29.1.3, build 29.1.3-0ubuntu3~24.04.1\nBIN::containerd::containerd github.com/containerd/containerd/v2 2.2.1 \nBIN::python3::Python 3.12.3\nBIN::openssl::Invalid command '--version'; type \"help\" for a list.\nBIN::chronyd::chronyd (chrony) version 4.5 (+CMDMON +NTP +REFCLOCK +RTC +PRIVDROP +SCFILTER +SIGND +ASYNCDNS +NTS +SECHASH +IPV6 -DEBUG)\nBIN::dnsmasq::Dnsmasq version 2.90  Copyright (c) 2000-2024 Simon Kelley\nPKG::docker.io::29.1.3-0ubuntu3~24.04.1\nPKG::containerd::2.2.1-0ubuntu1~24.04.2\nPKG::python3::3.12.3-0ubuntu2.1\nPKG::openssl::3.0.13-0ubuntu3.7\nPKG::dnsmasq::2.90-2ubuntu0.1\nPKG::chrony::4.5-1ubuntu4.2\nRUNNING_SERVICES_START\nchrony.service\ncontainerd.service\ncron.service\ndbus.service\ndnsmasq.service\ndocker.service\nfwupd.service\ngetty@tty1.service\nModemManager.service\nmultipathd.service\nopen-vm-tools.service\npolkit.service\nrsyslog.service\nserial-getty@ttyS0.service\nssh.service\nsystemd-journald.service\nsystemd-logind.service\nsystemd-networkd.service\nsystemd-resolved.service\nsystemd-udevd.service\nudisks2.service\nunattended-upgrades.service\nuser@1000.service\nvgauth.service\nvm-portal-refresh.service\nvm-portal-web.service\nRUNNING_SERVICES_END\n",
+      "stderr": ""
+    },
+    {
+      "name": "ubuntu",
+      "ip": "192.168.12.147",
+      "user": "redapple",
+      "status": "ok",
+      "raw": "HOSTNAME=redapple3\nOS=Ubuntu 22.10\nKERNEL=5.19.0-41-generic\nPACKAGE_MANAGER=dpkg\nBIN::python3::Python 3.10.7\nBIN::openssl::Invalid command '--version'; type \"help\" for a list.\nPKG::python3::3.10.6-1\nPKG::openssl::3.0.5-2ubuntu2.2\nRUNNING_SERVICES_START\ncron.service\ndbus.service\ngetty@tty1.service\nirqbalance.service\nModemManager.service\nmultipathd.service\nopen-vm-tools.service\npolkit.service\nrsyslog.service\nsnap.microk8s.daemon-apiserver-kicker.service\nsnap.microk8s.daemon-containerd.service\nsnap.microk8s.daemon-k8s-dqlite.service\nssh.service\nsystemd-journald.service\nsystemd-logind.service\nsystemd-networkd.service\nsystemd-resolved.service\nsystemd-timesyncd.service\nsystemd-udevd.service\nudisks2.service\nunattended-upgrades.service\nupower.service\nuser@1000.service\nvgauth.service\nRUNNING_SERVICES_END\n",
+      "stderr": ""
+    },
+    {
+      "name": "ubuntu24-zt-01",
+      "ip": "192.168.12.236",
+      "user": "devops",
+      "status": "ok",
+      "raw": "HOSTNAME=ubuntu24-zt-01\nOS=Ubuntu 24.04.4 LTS\nKERNEL=6.8.0-106-generic\nPACKAGE_MANAGER=dpkg\nBIN::docker::Docker version 29.1.3, build 29.1.3-0ubuntu3~24.04.1\nBIN::containerd::containerd github.com/containerd/containerd/v2 2.2.1 \nBIN::python3::Python 3.12.3\nBIN::openssl::Invalid command '--version'; type \"help\" for a list.\nBIN::dnsmasq::Dnsmasq version 2.90  Copyright (c) 2000-2024 Simon Kelley\nPKG::docker.io::29.1.3-0ubuntu3~24.04.1\nPKG::containerd::2.2.1-0ubuntu1~24.04.2\nPKG::python3::3.12.3-0ubuntu2.1\nPKG::openssl::3.0.13-0ubuntu3.7\nRUNNING_SERVICES_START\ncontainerd.service\ncron.service\ndbus.service\ndocker.service\nfwupd.service\ngetty@tty1.service\nModemManager.service\nmultipathd.service\nopen-vm-tools.service\npolkit.service\nrsyslog.service\nserial-getty@ttyS0.service\nssh.service\nsystemd-journald.service\nsystemd-logind.service\nsystemd-networkd.service\nsystemd-resolved.service\nsystemd-timesyncd.service\nsystemd-udevd.service\nudisks2.service\nunattended-upgrades.service\nuser@1000.service\nvgauth.service\nRUNNING_SERVICES_END\n",
+      "stderr": ""
+    }
+  ]
+}
