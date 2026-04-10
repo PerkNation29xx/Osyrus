@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-04-09T07:24:44Z",
-  "total": 9,
-  "reachable": 9,
+  "generated_at": "2026-04-10T06:51:26Z",
+  "total": 15,
+  "reachable": 15,
   "items": [
     {
       "ip": "192.168.12.136",
@@ -126,6 +126,114 @@
           "type": "esxi_host",
           "name": "vm2",
           "host_alias": "vm2"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.12.241",
+      "port": 443,
+      "url": "https://192.168.12.241:443/",
+      "reachable": true,
+      "status": 200,
+      "final_url": "https://192.168.12.241:443/app/login",
+      "title": "Wazuh",
+      "server": "",
+      "error": "",
+      "assets": [
+        {
+          "type": "vm",
+          "name": "osyrus-wazuh-01",
+          "host_alias": "vm1"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.12.242",
+      "port": 5601,
+      "url": "http://192.168.12.242:5601/",
+      "reachable": true,
+      "status": 200,
+      "final_url": "http://192.168.12.242:5601/app/home",
+      "title": "OpenSearch Dashboards",
+      "server": "",
+      "error": "",
+      "assets": [
+        {
+          "type": "vm",
+          "name": "osyrus-opensearch-01",
+          "host_alias": "vm1"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.12.243",
+      "port": 3001,
+      "url": "http://192.168.12.243:3001/",
+      "reachable": true,
+      "status": 200,
+      "final_url": "http://192.168.12.243:3001/",
+      "title": "Shuffle",
+      "server": "nginx",
+      "error": "",
+      "assets": [
+        {
+          "type": "vm",
+          "name": "osyrus-shuffle-01",
+          "host_alias": "vm1"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.12.244",
+      "port": 3000,
+      "url": "http://192.168.12.244:3000/",
+      "reachable": true,
+      "status": 200,
+      "final_url": "http://192.168.12.244:3000/",
+      "title": "Dashboard - Semaphore UI",
+      "server": "",
+      "error": "",
+      "assets": [
+        {
+          "type": "vm",
+          "name": "osyrus-ansible-01",
+          "host_alias": "vm1"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.12.245",
+      "port": 3000,
+      "url": "http://192.168.12.245:3000/",
+      "reachable": true,
+      "status": 200,
+      "final_url": "http://192.168.12.245:3000/login",
+      "title": "Grafana",
+      "server": "",
+      "error": "",
+      "assets": [
+        {
+          "type": "vm",
+          "name": "osyrus-observability-01",
+          "host_alias": "vm1"
+        }
+      ]
+    },
+    {
+      "ip": "192.168.12.245",
+      "port": 9090,
+      "url": "http://192.168.12.245:9090/",
+      "reachable": true,
+      "status": 200,
+      "final_url": "http://192.168.12.245:9090/query",
+      "title": "Prometheus Time Series Collection and Processing Server",
+      "server": "",
+      "error": "",
+      "assets": [
+        {
+          "type": "vm",
+          "name": "osyrus-observability-01",
+          "host_alias": "vm1"
         }
       ]
     },

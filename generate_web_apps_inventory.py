@@ -19,7 +19,7 @@ INVENTORY_JSON = BASE_DIR / "inventory.json"
 OUTPUT_JSON = BASE_DIR / "web_apps_inventory.json"
 DISCOVERED_TARGETS = BASE_DIR / "reports" / "discovered_targets.txt"
 
-WEB_PORTS = [80, 81, 443, 8080, 8081, 8090, 8443, 3000, 5000, 5601, 9000]
+WEB_PORTS = [80, 81, 443, 8080, 8081, 8090, 8443, 3000, 3001, 5000, 5601, 9000, 9090]
 
 
 def load_inventory() -> dict:

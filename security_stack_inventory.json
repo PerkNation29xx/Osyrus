@@ -1,0 +1,91 @@
+{
+  "generated_at": "2026-04-10T15:25:10Z",
+  "total_services": 6,
+  "reachable_services": 5,
+  "items": [
+    {
+      "id": "wazuh",
+      "name": "Wazuh Dashboard",
+      "category": "SIEM/XDR",
+      "host": "osyrus-wazuh-01",
+      "ip": "192.168.12.241",
+      "url": "https://192.168.12.241/",
+      "credentials": "admin / (stored on host at /tmp/wazuh-install.log)",
+      "notes": "Wazuh manager, indexer, and dashboard all-in-one node",
+      "reachable": false,
+      "status": 0,
+      "final_url": "",
+      "error": "<urlopen error _ssl.c:1063: The handshake operation timed out>"
+    },
+    {
+      "id": "opensearch",
+      "name": "OpenSearch Dashboards",
+      "category": "SIEM Search",
+      "host": "osyrus-opensearch-01",
+      "ip": "192.168.12.242",
+      "url": "http://192.168.12.242:5601/",
+      "credentials": "No auth (security plugin disabled for lab)",
+      "notes": "Single-node OpenSearch + Dashboards",
+      "reachable": true,
+      "status": 200,
+      "final_url": "http://192.168.12.242:5601/app/home",
+      "error": ""
+    },
+    {
+      "id": "shuffle",
+      "name": "Shuffle SOAR",
+      "category": "SOAR",
+      "host": "osyrus-shuffle-01",
+      "ip": "192.168.12.243",
+      "url": "http://192.168.12.243:3001/",
+      "credentials": "Create admin on first login",
+      "notes": "Workflow automation and response orchestration",
+      "reachable": true,
+      "status": 200,
+      "final_url": "http://192.168.12.243:3001/",
+      "error": ""
+    },
+    {
+      "id": "ansible",
+      "name": "Semaphore (Ansible UI)",
+      "category": "Patch Orchestration",
+      "host": "osyrus-ansible-01",
+      "ip": "192.168.12.244",
+      "url": "http://192.168.12.244:3000/",
+      "credentials": "admin / stored in vault",
+      "notes": "Ansible control node with Semaphore UI",
+      "reachable": true,
+      "status": 200,
+      "final_url": "http://192.168.12.244:3000/",
+      "error": ""
+    },
+    {
+      "id": "grafana",
+      "name": "Grafana",
+      "category": "Observability",
+      "host": "osyrus-observability-01",
+      "ip": "192.168.12.245",
+      "url": "http://192.168.12.245:3000/",
+      "credentials": "admin / stored in vault",
+      "notes": "Dashboards for vulnerability and host metrics",
+      "reachable": true,
+      "status": 200,
+      "final_url": "http://192.168.12.245:3000/login",
+      "error": ""
+    },
+    {
+      "id": "prometheus",
+      "name": "Prometheus",
+      "category": "Observability",
+      "host": "osyrus-observability-01",
+      "ip": "192.168.12.245",
+      "url": "http://192.168.12.245:9090/",
+      "credentials": "No auth (lab)",
+      "notes": "Metrics scraping and alert source",
+      "reachable": true,
+      "status": 200,
+      "final_url": "http://192.168.12.245:9090/query",
+      "error": ""
+    }
+  ]
+}

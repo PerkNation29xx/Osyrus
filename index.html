@@ -344,6 +344,7 @@
           <a href="PATCH_PLAN_PCI_NIST.md" target="_blank" rel="noopener">Patch Plan</a>
           <a href="app_inventory.json" target="_blank" rel="noopener">App Inventory</a>
           <a href="web_apps_inventory.json" target="_blank" rel="noopener">Web Apps</a>
+          <a href="security_stack_inventory.json" target="_blank" rel="noopener">Security Stack</a>
           <a href="discovered_hosts.json" target="_blank" rel="noopener">Discovered Hosts</a>
           <a href="vulnerability_report.json" target="_blank" rel="noopener">Vulnerability Report</a>
           <a href="VULN_UPGRADE_PATH_PLAN.md" target="_blank" rel="noopener">Upgrade Path Plan</a>
@@ -356,6 +357,7 @@
 
     <section class="summary" id="summary"></section>
     <section id="scanners"></section>
+    <section id="securitystack"></section>
     <section id="discovered"></section>
     <section id="webapps"></section>
     <section id="hosts"></section>
@@ -365,6 +367,7 @@
     const generatedAtEl = document.getElementById('generatedAt');
     const summaryEl = document.getElementById('summary');
     const scannersEl = document.getElementById('scanners');
+    const securityStackEl = document.getElementById('securitystack');
     const discoveredEl = document.getElementById('discovered');
     const webappsEl = document.getElementById('webapps');
     const hostsEl = document.getElementById('hosts');
@@ -395,7 +398,7 @@
       };
     }
 
-    function renderSummary(hosts, vulnSummary, scannerData, webData, discoveredData) {
+    function renderSummary(hosts, vulnSummary, scannerData, webData, discoveredData, securityStackData) {
       const totals = hosts.reduce((acc, host) => {
         const c = host.counts || {};
         acc.hosts += 1;
@@ -444,6 +447,12 @@
         items.push(
           { label: 'Discovered Hosts', value: shortNum(discoveredTotal) },
           { label: 'Unmanaged Hosts', value: shortNum(unmanagedTotal) }
+        );
+      }
+      if (securityStackData && Array.isArray(securityStackData.items)) {
+        items.push(
+          { label: 'Security Services', value: shortNum(securityStackData.total_services || 0) },
+          { label: 'Security Up', value: shortNum(securityStackData.reachable_services || 0) }
         );
       }
 
@@ -633,6 +642,54 @@
       `;
     }
 
+    function securityStackRow(item) {
+      const up = item.reachable === true;
+      const chip = up ? 'status-up' : 'status-down';
+      return `
+        <tr>
+          <td>${esc(item.name || '-')}</td>
+          <td>${esc(item.category || '-')}</td>
+          <td>${esc(item.host || '-')} (${esc(item.ip || '-')})</td>
+          <td><a href="${esc(item.final_url || item.url || '#')}" target="_blank" rel="noopener">${esc(item.url || '-')}</a></td>
+          <td><span class="chip ${chip}">${up ? 'reachable' : 'unreachable'}</span></td>
+          <td>${shortNum(item.status || 0)}</td>
+          <td>${esc(item.credentials || '-')}</td>
+        </tr>
+      `;
+    }
+
+    function renderSecurityStack(securityStackData) {
+      if (!securityStackData || !Array.isArray(securityStackData.items) || securityStackData.items.length === 0) {
+        securityStackEl.innerHTML = '';
+        return;
+      }
+
+      const rows = securityStackData.items.map(securityStackRow).join('');
+      securityStackEl.innerHTML = `
+        <article class="card host">
+          <div class="host-head">
+            <h2 class="host-title">Security Stack Services</h2>
+            <div class="chips">
+              <span class="chip">Total ${shortNum(securityStackData.total_services || 0)}</span>
+              <span class="chip">Reachable ${shortNum(securityStackData.reachable_services || 0)}</span>
+              <span class="chip">Generated ${esc(securityStackData.generated_at || '-')}</span>
+            </div>
+          </div>
+          <div class="host-body">
+            <div class="panel">
+              <h3>SIEM / SOAR / Patch / Observability</h3>
+              <table>
+                <thead>
+                  <tr><th>Service</th><th>Category</th><th>Host</th><th>URL</th><th>Status</th><th>HTTP</th><th>Access</th></tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
     function discoveredHostRow(item) {
       const known = item.in_inventory === true;
       return `
@@ -798,12 +855,13 @@
     async function loadInventory() {
       refreshBtn.disabled = true;
       try {
-        const [inventoryResponse, vulnResponse, scannerResponse, webResponse, discoveredResponse] = await Promise.all([
+        const [inventoryResponse, vulnResponse, scannerResponse, webResponse, discoveredResponse, securityStackResponse] = await Promise.all([
           fetch(`inventory.json?ts=${Date.now()}`),
           fetch(`vulnerability_report.json?ts=${Date.now()}`).catch(() => null),
           fetch(`scanner_nodes.json?ts=${Date.now()}`).catch(() => null),
           fetch(`web_apps_inventory.json?ts=${Date.now()}`).catch(() => null),
-          fetch(`discovered_hosts.json?ts=${Date.now()}`).catch(() => null)
+          fetch(`discovered_hosts.json?ts=${Date.now()}`).catch(() => null),
+          fetch(`security_stack_inventory.json?ts=${Date.now()}`).catch(() => null)
         ]);
 
         if (!inventoryResponse.ok) {
@@ -815,6 +873,7 @@
         let scannerData = null;
         let webData = null;
         let discoveredData = null;
+        let securityStackData = null;
         if (vulnResponse && vulnResponse.ok) {
           vulnData = await vulnResponse.json();
         }
@@ -827,6 +886,9 @@
         if (discoveredResponse && discoveredResponse.ok) {
           discoveredData = await discoveredResponse.json();
         }
+        if (securityStackResponse && securityStackResponse.ok) {
+          securityStackData = await securityStackResponse.json();
+        }
         const security = buildSecurityIndex(vulnData);
 
         const invText = `Inventory: ${new Date(data.generated_at).toLocaleString()}`;
@@ -834,10 +896,12 @@
         const scannerText = scannerData?.generated_at ? ` • Scanners: ${new Date(scannerData.generated_at).toLocaleString()}` : '';
         const webText = webData?.generated_at ? ` • Web URLs: ${new Date(webData.generated_at).toLocaleString()}` : '';
         const discoveredText = discoveredData?.generated_at ? ` • Discovery: ${new Date(discoveredData.generated_at).toLocaleString()}` : '';
-        generatedAtEl.textContent = `${invText}${vulnText}${scannerText}${webText}${discoveredText}`;
+        const stackText = securityStackData?.generated_at ? ` • Security Stack: ${new Date(securityStackData.generated_at).toLocaleString()}` : '';
+        generatedAtEl.textContent = `${invText}${vulnText}${scannerText}${webText}${discoveredText}${stackText}`;
 
-        renderSummary(data.hosts || [], security?.summary || null, scannerData, webData, discoveredData);
+        renderSummary(data.hosts || [], security?.summary || null, scannerData, webData, discoveredData, securityStackData);
         renderScanners(scannerData);
+        renderSecurityStack(securityStackData);
         renderDiscoveredHosts(discoveredData);
         renderWebApps(webData);
         hostsEl.innerHTML = (data.hosts || []).map((host) => renderHost(host, security)).join('');
@@ -845,6 +909,7 @@
         generatedAtEl.textContent = `Inventory load failed: ${error.message}`;
         summaryEl.innerHTML = '';
         scannersEl.innerHTML = '';
+        securityStackEl.innerHTML = '';
         discoveredEl.innerHTML = '';
         webappsEl.innerHTML = '';
         hostsEl.innerHTML = `<pre class="error">${error.message}</pre>`;
