@@ -100,6 +100,7 @@ async function maybeServeDataset(pathname, method, res) {
   const resolved = await resolveDatasetPayload(dataset.name, {
     rootDir,
     autoImport,
+    strictDatabase: dbRequired,
   });
 
   if (!resolved) {
