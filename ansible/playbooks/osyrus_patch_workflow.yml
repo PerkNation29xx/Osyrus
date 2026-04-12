@@ -1,0 +1,66 @@
+---
+- name: Osyrus permissioned patch workflow
+  hosts: all
+  gather_facts: true
+  become: true
+  vars:
+    target_ip: "{{ target_ip | default(inventory_hostname) }}"
+    target_name: "{{ target_name | default(inventory_hostname) }}"
+    target_type: "{{ target_type | default('unknown') }}"
+    cve_id: "{{ cve_id | default('') }}"
+    snapshot_required: "{{ (snapshot_required | default(false)) | bool }}"
+    clone_requested: "{{ (clone_requested | default(false)) | bool }}"
+    rollback_strategy: "{{ rollback_strategy | default('manual_restore_required') }}"
+
+  pre_tasks:
+    - name: Print workflow context
+      ansible.builtin.debug:
+        msg:
+          - "Target: {{ target_name }} ({{ target_ip }})"
+          - "Type: {{ target_type }}"
+          - "CVE: {{ cve_id | default('n/a') }}"
+          - "Snapshot required: {{ snapshot_required }}"
+          - "Clone requested: {{ clone_requested }}"
+          - "Rollback strategy: {{ rollback_strategy }}"
+
+    - name: Snapshot placeholder
+      ansible.builtin.debug:
+        msg: "Snapshot workflow should run here using VMware modules or vCenter APIs."
+      when: snapshot_required
+
+    - name: Clone placeholder
+      ansible.builtin.debug:
+        msg: "Clone workflow should run here using VMware modules or vCenter APIs."
+      when: clone_requested
+
+  tasks:
+    - name: Capture package facts before patch
+      ansible.builtin.package_facts:
+        manager: auto
+      when: target_type != "esxi_host"
+
+    - name: Patch Debian/Ubuntu targets
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: dist
+      when:
+        - target_type != "esxi_host"
+        - ansible_facts.os_family == "Debian"
+
+    - name: Patch RHEL/CentOS/Alma/Rocky targets
+      ansible.builtin.yum:
+        name: "*"
+        state: latest
+      when:
+        - target_type != "esxi_host"
+        - ansible_facts.os_family == "RedHat"
+
+    - name: ESXi patch placeholder
+      ansible.builtin.debug:
+        msg: "ESXi patching should call VMware lifecycle tooling in a dedicated play/task."
+      when: target_type == "esxi_host"
+
+  post_tasks:
+    - name: Print rollback guidance
+      ansible.builtin.debug:
+        msg: "Rollback strategy selected: {{ rollback_strategy }}"

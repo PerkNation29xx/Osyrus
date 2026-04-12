@@ -12,6 +12,7 @@ Single-page dashboard for `vm1` (`192.168.12.148`) and `vm2` (`192.168.12.217`) 
 - Frontend: `index.html`
 - Backend: `server.js` (serves static UI + JSON/API routes)
 - Storage: Postgres snapshots (local Postgres or Supabase), with file fallback
+- Patch workflow: permissioned API + approval queue + Ansible dispatch
 
 ## Files
 - `generate_inventory.sh`: pulls live inventory from both ESXi hosts via `govc`
@@ -20,6 +21,11 @@ Single-page dashboard for `vm1` (`192.168.12.148`) and `vm2` (`192.168.12.217`) 
 - `generate_vulnerability_report.py`: converts scan XML to `vulnerability_report.json` + `VULN_UPGRADE_PATH_PLAN.md`
 - `generate_web_apps_inventory.py`: discovers reachable HTTP/HTTPS app URLs and writes `web_apps_inventory.json`
 - `db/schema.sql`: Postgres schema for portal datasets
+- `lib/patch_workflow.js`: patch planning engine (snapshot/rollback decisioning)
+- `lib/patch_store.js`: patch job persistence (DB + file fallback)
+- `lib/patch_executor.js`: async Ansible dispatcher
+- `scripts/patch/run_ansible_patch.sh`: patch execution bridge
+- `ansible/playbooks/osyrus_patch_workflow.yml`: repeatable patch workflow playbook
 - `scripts/db/init_db.js`: creates required DB schema objects
 - `scripts/db/seed_from_json.js`: imports JSON artifacts into DB snapshots
 - `remediation_status.json`: manual remediation tracker (set remediated CVE IDs by host IP)
@@ -122,6 +128,31 @@ curl http://localhost:8090/api/health
 ```
 
 Data routes (`/inventory.json`, `/vulnerability_report.json`, etc.) now serve DB snapshots first, then local files as fallback.
+
+## Permissioned Patch Workflow
+Patch APIs:
+- `GET /api/patch/config`
+- `GET /api/patch/jobs`
+- `POST /api/patch/plan`
+- `POST /api/patch/jobs`
+- `POST /api/patch/jobs/:id/approve`
+- `POST /api/patch/jobs/:id/execute`
+
+Token env vars:
+- `OSYRUS_PATCH_TOKEN` (global token) or role tokens:
+- `OSYRUS_PATCH_REQUEST_TOKEN`
+- `OSYRUS_PATCH_APPROVE_TOKEN`
+- `OSYRUS_PATCH_EXECUTE_TOKEN`
+
+Execution mode:
+- `OSYRUS_PATCH_EXECUTION_MODE=dry-run` (default, safe)
+- `OSYRUS_PATCH_EXECUTION_MODE=live` (runs Ansible for real)
+
+Workflow behavior:
+- VM targets: snapshot first; optional clone; then patch.
+- Non-VM targets with SSH: package-state rollback plan.
+- No rollback path: request is blocked and requires force-approval.
+- Portal UI now includes per-asset `Plan` and `Request` buttons plus queue-based `Approve` and `Execute`.
 
 ## Render Deployment (Public)
 1. Push this directory to a Git repository.

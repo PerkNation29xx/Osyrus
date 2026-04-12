@@ -18,6 +18,11 @@ This portal directory is now Render-ready.
 - `DATABASE_URL` (Supabase or Postgres connection string)
 - `DATABASE_SSL=require` (required for Supabase)
 - Optional: `PORTAL_DB_REQUIRED=true`, `PORTAL_DB_AUTO_IMPORT=true`
+- Patch workflow (recommended):
+- `OSYRUS_PATCH_TOKEN` or role tokens (`OSYRUS_PATCH_REQUEST_TOKEN`, `OSYRUS_PATCH_APPROVE_TOKEN`, `OSYRUS_PATCH_EXECUTE_TOKEN`)
+- `OSYRUS_PATCH_EXECUTION_MODE=dry-run` initially, then `live` after testing
+- `OSYRUS_PATCH_PLAYBOOK=ansible/playbooks/osyrus_patch_workflow.yml`
+- `OSYRUS_PATCH_INVENTORY=ansible/inventory/hosts.ini`
 6. Deploy when ready.
 
 ## Public URL
@@ -28,3 +33,4 @@ That URL serves:
 - `/VULN_UPGRADE_PATH_PLAN.md`
 - `/inventory.json`
 - `/api/health`
+- `/api/patch/jobs`

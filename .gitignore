@@ -6,3 +6,4 @@ vuln_scan_*.xml
 vuln_scan_*.txt
 web_ports.grep
 web_ports.xml
+patch_jobs.json

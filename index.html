@@ -100,6 +100,29 @@
       filter: brightness(1.05);
     }
 
+    .button.secondary {
+      background: #5d6c6d;
+    }
+
+    .button.warn {
+      background: #b14c00;
+    }
+
+    .button.mini {
+      padding: 0.32rem 0.58rem;
+      font-size: 0.7rem;
+    }
+
+    .input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.5rem 0.6rem;
+      font: 500 0.8rem/1.2 "IBM Plex Mono", monospace;
+      background: rgba(255, 255, 255, 0.82);
+      color: var(--ink);
+    }
+
     .summary {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -342,6 +365,7 @@
         <span class="meta" id="generatedAt">Loading inventory...</span>
         <div class="meta-links">
           <a href="PATCH_PLAN_PCI_NIST.md" target="_blank" rel="noopener">Patch Plan</a>
+          <a href="api/patch/jobs" target="_blank" rel="noopener">Patch Jobs API</a>
           <a href="app_inventory.json" target="_blank" rel="noopener">App Inventory</a>
           <a href="web_apps_inventory.json" target="_blank" rel="noopener">Web Apps</a>
           <a href="security_stack_inventory.json" target="_blank" rel="noopener">Security Stack</a>
@@ -357,6 +381,7 @@
 
     <section class="summary" id="summary"></section>
     <section id="scanners"></section>
+    <section id="patching"></section>
     <section id="securitystack"></section>
     <section id="discovered"></section>
     <section id="webapps"></section>
@@ -367,11 +392,14 @@
     const generatedAtEl = document.getElementById('generatedAt');
     const summaryEl = document.getElementById('summary');
     const scannersEl = document.getElementById('scanners');
+    const patchingEl = document.getElementById('patching');
     const securityStackEl = document.getElementById('securitystack');
     const discoveredEl = document.getElementById('discovered');
     const webappsEl = document.getElementById('webapps');
     const hostsEl = document.getElementById('hosts');
     const refreshBtn = document.getElementById('refreshBtn');
+    let latestInventoryData = null;
+    let latestVulnerabilityData = null;
 
     const shortNum = (value) => new Intl.NumberFormat().format(value ?? 0);
     const esc = (value) => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
@@ -504,7 +532,24 @@
       `;
     }
 
-    function profileAssetRow(asset) {
+    function findAssetTopCveId(assetIp) {
+      if (!latestVulnerabilityData || !Array.isArray(latestVulnerabilityData.assets)) {
+        return '';
+      }
+      const matches = latestVulnerabilityData.assets.filter((item) => item.ip === assetIp);
+      let best = null;
+      for (const asset of matches) {
+        for (const cve of (asset.cves || [])) {
+          if (!best || Number(cve.score || 0) > Number(best.score || 0)) {
+            best = cve;
+          }
+        }
+      }
+      return best ? (best.id || '') : '';
+    }
+
+    function profileAssetRow(asset, profileAlias) {
+      const topCve = findAssetTopCveId(asset.ip);
       return `
         <tr>
           <td>${esc(asset.asset_name || asset.ip)}</td>
@@ -514,6 +559,10 @@
           <td>${shortNum(asset.critical || 0)}</td>
           <td>${shortNum(asset.high || 0)}</td>
           <td>${fmtPct(asset.remediation_percent || 0)}</td>
+          <td>
+            <button class="button mini secondary js-patch-plan" type="button" data-ip="${esc(asset.ip || '')}" data-name="${esc(asset.asset_name || '')}" data-type="${esc(asset.asset_type || '')}" data-host="${esc(profileAlias || '')}" data-cve="${esc(topCve)}">Plan</button>
+            <button class="button mini js-patch-request" type="button" data-ip="${esc(asset.ip || '')}" data-name="${esc(asset.asset_name || '')}" data-type="${esc(asset.asset_type || '')}" data-host="${esc(profileAlias || '')}" data-cve="${esc(topCve)}">Request</button>
+          </td>
         </tr>
       `;
     }
@@ -553,7 +602,7 @@
 
       const summary = profile.cve_summary || {};
       const assetsHtml = (profile.assets || []).length
-        ? `<table><thead><tr><th>Asset</th><th>Type</th><th>IP</th><th>CVEs</th><th>Critical</th><th>High</th><th>Remediated</th></tr></thead><tbody>${profile.assets.map(profileAssetRow).join('')}</tbody></table>`
+        ? `<table><thead><tr><th>Asset</th><th>Type</th><th>IP</th><th>CVEs</th><th>Critical</th><th>High</th><th>Remediated</th><th>Patch</th></tr></thead><tbody>${profile.assets.map((asset) => profileAssetRow(asset, profile.alias)).join('')}</tbody></table>`
         : '<p class="empty">No scanned assets in this profile.</p>';
 
       const cveHtml = (profile.top_cves || []).length
@@ -637,6 +686,177 @@
           </div>
           <div class="host-body">
             <div class="panel"><h3>Scanner Fleet</h3>${nodeTable}</div>
+          </div>
+        </article>
+      `;
+    }
+
+    function patchStatusClass(status) {
+      const value = (status || '').toLowerCase();
+      if (['completed'].includes(value)) return 'status-up';
+      if (['running', 'approved', 'awaiting_approval'].includes(value)) return '';
+      return 'status-down';
+    }
+
+    function patchBackupText(summary) {
+      if (summary?.snapshot_required === true) {
+        return 'VM snapshot';
+      }
+      if (summary?.ssh_accessible === true) {
+        return 'Package rollback';
+      }
+      return 'No automated backup';
+    }
+
+    function getSavedPatchToken() {
+      return localStorage.getItem('osyrus_patch_token') || '';
+    }
+
+    function setSavedPatchToken(value) {
+      localStorage.setItem('osyrus_patch_token', value || '');
+    }
+
+    function getPatchTokenFromUi() {
+      const input = document.getElementById('patchTokenInput');
+      const value = (input?.value || '').trim();
+      if (value) {
+        setSavedPatchToken(value);
+        return value;
+      }
+      return getSavedPatchToken();
+    }
+
+    function setPatchMessage(text, isError = false) {
+      const el = document.getElementById('patchMessage');
+      if (!el) return;
+      el.innerHTML = `<span class="chip ${isError ? 'status-down' : 'status-up'}">${esc(text)}</span>`;
+    }
+
+    async function patchApi(path, method = 'GET', body = null, requiresToken = false) {
+      const headers = {};
+      if (body != null) {
+        headers['Content-Type'] = 'application/json';
+      }
+      if (requiresToken) {
+        const token = getPatchTokenFromUi();
+        if (!token) {
+          throw new Error('Patch token is required. Enter token in Patch Workflow panel.');
+        }
+        headers['x-osyrus-token'] = token;
+      }
+      const response = await fetch(path, {
+        method,
+        headers,
+        body: body != null ? JSON.stringify(body) : undefined
+      });
+      if (!response.ok) {
+        let details = `HTTP ${response.status}`;
+        try {
+          const payload = await response.json();
+          details = payload.error || payload.message || details;
+        } catch (_error) {
+          // ignore parse errors
+        }
+        throw new Error(details);
+      }
+      return response.json();
+    }
+
+    function patchJobRow(job) {
+      const summary = job.plan?.summary || {};
+      const chip = patchStatusClass(job.status);
+      const backup = patchBackupText(summary);
+      const actions = [];
+
+      if (job.status === 'awaiting_approval') {
+        actions.push(`<button class="button mini secondary js-patch-approve" type="button" data-job-id="${job.id}" data-force="false">Approve</button>`);
+      }
+      if (job.status === 'blocked_no_backup') {
+        actions.push(`<button class="button mini warn js-patch-approve" type="button" data-job-id="${job.id}" data-force="true">Force Approve</button>`);
+      }
+      if (job.status === 'approved') {
+        actions.push(`<button class="button mini js-patch-execute" type="button" data-job-id="${job.id}">Execute</button>`);
+      }
+
+      return `
+        <tr>
+          <td>#${shortNum(job.id || 0)}</td>
+          <td>${esc(job.target_name || '-')}</td>
+          <td>${esc(job.target_ip || '-')}</td>
+          <td>${esc(job.target_type || '-')}</td>
+          <td><span class="chip ${chip}">${esc(job.status || 'unknown')}</span></td>
+          <td>${esc(job.cve_id || summary.cve?.id || '-')}</td>
+          <td>${esc(backup)}</td>
+          <td>${esc(summary.rollback_strategy || '-')}</td>
+          <td>${esc(job.requested_by || '-')}</td>
+          <td>${esc(job.approved_by || '-')}</td>
+          <td>${esc(job.executed_by || '-')}</td>
+          <td>${esc((job.execution && (job.execution.completed_at || job.execution.started_at)) || job.updated_at || '-')}</td>
+          <td>${actions.join(' ') || '<span class="small">none</span>'}</td>
+        </tr>
+      `;
+    }
+
+    function renderPatching(patchData, patchConfig) {
+      const jobs = Array.isArray(patchData?.jobs) ? patchData.jobs : [];
+      const queued = jobs.filter((job) => ['awaiting_approval', 'blocked_no_backup'].includes(job.status)).length;
+      const running = jobs.filter((job) => job.status === 'running').length;
+      const failed = jobs.filter((job) => job.status === 'failed').length;
+      const completed = jobs.filter((job) => job.status === 'completed').length;
+      const tokenValue = getSavedPatchToken();
+
+      const table = jobs.length
+        ? `<table>
+            <thead>
+              <tr>
+                <th>Job</th><th>Target</th><th>IP</th><th>Type</th><th>Status</th><th>CVE</th><th>Backup</th><th>Rollback</th><th>Requested</th><th>Approved</th><th>Executed</th><th>Updated</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>${jobs.map(patchJobRow).join('')}</tbody>
+          </table>`
+        : '<p class="empty">No patch jobs yet. Use Plan/Request from a host asset row.</p>';
+
+      patchingEl.innerHTML = `
+        <article class="card host">
+          <div class="host-head">
+            <h2 class="host-title">Patching Workflow</h2>
+            <div class="chips">
+              <span class="chip">Queued ${shortNum(queued)}</span>
+              <span class="chip">Running ${shortNum(running)}</span>
+              <span class="chip">Failed ${shortNum(failed)}</span>
+              <span class="chip">Completed ${shortNum(completed)}</span>
+              <span class="chip">Mode ${esc(patchConfig?.execution_mode || 'dry-run')}</span>
+            </div>
+          </div>
+          <div class="host-body">
+            <div class="grid-two">
+              <div class="panel">
+                <h3>Permissioned Controls</h3>
+                <div style="padding: 0.85rem;">
+                  <p class="small">Write actions require token. Set request/approve/execute token configured on server.</p>
+                  <input id="patchTokenInput" class="input" type="password" value="${esc(tokenValue)}" placeholder="Enter patch workflow token">
+                  <div style="margin-top:0.6rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+                    <button class="button mini secondary js-patch-save-token" type="button">Save Token</button>
+                    <button class="button mini secondary js-patch-refresh" type="button">Refresh Jobs</button>
+                  </div>
+                  <div id="patchMessage" style="margin-top:0.6rem;"></div>
+                </div>
+              </div>
+              <div class="panel">
+                <h3>Workflow Policy</h3>
+                <div style="padding: 0.85rem;">
+                  <p class="small">1. Request patch from asset row.</p>
+                  <p class="small">2. VM targets: snapshot first, optional clone, then patch.</p>
+                  <p class="small">3. Non-VM with SSH: package rollback strategy.</p>
+                  <p class="small">4. No rollback path: job is blocked until force-approved.</p>
+                  <p class="small">5. Execution dispatches to Ansible playbook for repeatable automation.</p>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <h3>Patch Jobs</h3>
+              ${table}
+            </div>
           </div>
         </article>
       `;
@@ -853,16 +1073,150 @@
       `;
     }
 
+    async function runPatchPlan(target) {
+      const plan = await patchApi('/api/patch/plan', 'POST', target, false);
+      const summary = plan.summary || {};
+      const alerts = Array.isArray(summary.alerts) ? summary.alerts : [];
+      const lines = [
+        `Target: ${summary.target_name || target.target_name || '-'} (${summary.target_ip || target.target_ip || '-'})`,
+        `Type: ${summary.target_type || '-'}`,
+        `Backup: ${patchBackupText(summary)}`,
+        `Rollback: ${summary.rollback_strategy || '-'}`,
+        `Clone enabled: ${summary.clone_enabled ? 'yes' : 'no'}`,
+        `CVE: ${summary.cve?.id || target.cve_id || 'unspecified'}`
+      ];
+      for (const alertText of alerts) {
+        lines.push(`Alert: ${alertText}`);
+      }
+      setPatchMessage(`Plan ready for ${summary.target_name || summary.target_ip || 'target'}`);
+      alert(lines.join('\n'));
+    }
+
+    async function requestPatch(target) {
+      const cveDefault = target.cve_id || '';
+      const cveId = prompt('CVE ID to patch (optional):', cveDefault);
+      if (cveId === null) {
+        return;
+      }
+      const isVmType = String(target.target_type || '').toLowerCase().includes('vm');
+      const cloneVm = isVmType ? confirm('Create clone before patch?') : false;
+      const note = prompt('Patch request note (optional):', '') || '';
+
+      const response = await patchApi('/api/patch/jobs', 'POST', {
+        target_ip: target.target_ip,
+        target_name: target.target_name,
+        target_type: target.target_type,
+        host_alias: target.host_alias,
+        cve_id: String(cveId || '').trim().toUpperCase(),
+        clone_vm: cloneVm,
+        request_note: note
+      }, true);
+      setPatchMessage(response.message || `Patch job #${response.job?.id || ''} created`);
+      await loadInventory();
+    }
+
+    async function approvePatchJob(jobId, forceWithoutBackup) {
+      const response = await patchApi(`/api/patch/jobs/${jobId}/approve`, 'POST', {
+        force_without_backup: forceWithoutBackup === true
+      }, true);
+      setPatchMessage(`Patch job #${response.job?.id || jobId} approved`);
+      await loadInventory();
+    }
+
+    async function executePatchJob(jobId) {
+      const response = await patchApi(`/api/patch/jobs/${jobId}/execute`, 'POST', {}, true);
+      setPatchMessage(response.message || `Patch job #${jobId} execution started`);
+      await loadInventory();
+    }
+
+    async function handlePatchClick(event) {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+
+      if (target.classList.contains('js-patch-save-token')) {
+        const token = (document.getElementById('patchTokenInput')?.value || '').trim();
+        if (!token) {
+          setPatchMessage('Token cleared', true);
+          setSavedPatchToken('');
+          return;
+        }
+        setSavedPatchToken(token);
+        setPatchMessage('Patch token saved in browser storage');
+        return;
+      }
+
+      if (target.classList.contains('js-patch-refresh')) {
+        await loadInventory();
+        return;
+      }
+
+      if (target.classList.contains('js-patch-plan')) {
+        try {
+          await runPatchPlan({
+            target_ip: target.dataset.ip || '',
+            target_name: target.dataset.name || '',
+            target_type: target.dataset.type || '',
+            host_alias: target.dataset.host || '',
+            cve_id: target.dataset.cve || ''
+          });
+        } catch (error) {
+          setPatchMessage(error.message, true);
+        }
+        return;
+      }
+
+      if (target.classList.contains('js-patch-request')) {
+        try {
+          await requestPatch({
+            target_ip: target.dataset.ip || '',
+            target_name: target.dataset.name || '',
+            target_type: target.dataset.type || '',
+            host_alias: target.dataset.host || '',
+            cve_id: target.dataset.cve || ''
+          });
+        } catch (error) {
+          setPatchMessage(error.message, true);
+        }
+        return;
+      }
+
+      if (target.classList.contains('js-patch-approve')) {
+        const jobId = Number(target.dataset.jobId || 0);
+        const force = String(target.dataset.force || '').toLowerCase() === 'true';
+        if (!jobId) return;
+        try {
+          await approvePatchJob(jobId, force);
+        } catch (error) {
+          setPatchMessage(error.message, true);
+        }
+        return;
+      }
+
+      if (target.classList.contains('js-patch-execute')) {
+        const jobId = Number(target.dataset.jobId || 0);
+        if (!jobId) return;
+        try {
+          await executePatchJob(jobId);
+        } catch (error) {
+          setPatchMessage(error.message, true);
+        }
+      }
+    }
+
     async function loadInventory() {
       refreshBtn.disabled = true;
       try {
-        const [inventoryResponse, vulnResponse, scannerResponse, webResponse, discoveredResponse, securityStackResponse] = await Promise.all([
+        const [inventoryResponse, vulnResponse, scannerResponse, webResponse, discoveredResponse, securityStackResponse, patchConfigResponse, patchJobsResponse] = await Promise.all([
           fetch(`inventory.json?ts=${Date.now()}`),
           fetch(`vulnerability_report.json?ts=${Date.now()}`).catch(() => null),
           fetch(`scanner_nodes.json?ts=${Date.now()}`).catch(() => null),
           fetch(`web_apps_inventory.json?ts=${Date.now()}`).catch(() => null),
           fetch(`discovered_hosts.json?ts=${Date.now()}`).catch(() => null),
-          fetch(`security_stack_inventory.json?ts=${Date.now()}`).catch(() => null)
+          fetch(`security_stack_inventory.json?ts=${Date.now()}`).catch(() => null),
+          fetch(`/api/patch/config?ts=${Date.now()}`).catch(() => null),
+          fetch(`/api/patch/jobs?limit=120&ts=${Date.now()}`).catch(() => null)
         ]);
 
         if (!inventoryResponse.ok) {
@@ -875,6 +1229,8 @@
         let webData = null;
         let discoveredData = null;
         let securityStackData = null;
+        let patchConfigData = null;
+        let patchJobsData = null;
         if (vulnResponse && vulnResponse.ok) {
           vulnData = await vulnResponse.json();
         }
@@ -890,6 +1246,15 @@
         if (securityStackResponse && securityStackResponse.ok) {
           securityStackData = await securityStackResponse.json();
         }
+        if (patchConfigResponse && patchConfigResponse.ok) {
+          patchConfigData = await patchConfigResponse.json();
+        }
+        if (patchJobsResponse && patchJobsResponse.ok) {
+          patchJobsData = await patchJobsResponse.json();
+        }
+
+        latestInventoryData = data;
+        latestVulnerabilityData = vulnData;
         const security = buildSecurityIndex(vulnData);
 
         const invText = `Inventory: ${new Date(data.generated_at).toLocaleString()}`;
@@ -898,10 +1263,12 @@
         const webText = webData?.generated_at ? ` • Web URLs: ${new Date(webData.generated_at).toLocaleString()}` : '';
         const discoveredText = discoveredData?.generated_at ? ` • Discovery: ${new Date(discoveredData.generated_at).toLocaleString()}` : '';
         const stackText = securityStackData?.generated_at ? ` • Security Stack: ${new Date(securityStackData.generated_at).toLocaleString()}` : '';
-        generatedAtEl.textContent = `${invText}${vulnText}${scannerText}${webText}${discoveredText}${stackText}`;
+        const patchText = patchJobsData?.generated_at ? ` • Patch Jobs: ${new Date(patchJobsData.generated_at).toLocaleString()}` : '';
+        generatedAtEl.textContent = `${invText}${vulnText}${scannerText}${webText}${discoveredText}${stackText}${patchText}`;
 
         renderSummary(data.hosts || [], security?.summary || null, scannerData, webData, discoveredData, securityStackData);
         renderScanners(scannerData);
+        renderPatching(patchJobsData || { jobs: [] }, patchConfigData || {});
         renderSecurityStack(securityStackData);
         renderDiscoveredHosts(discoveredData);
         renderWebApps(webData);
@@ -910,6 +1277,7 @@
         generatedAtEl.textContent = `Inventory load failed: ${error.message}`;
         summaryEl.innerHTML = '';
         scannersEl.innerHTML = '';
+        patchingEl.innerHTML = '';
         securityStackEl.innerHTML = '';
         discoveredEl.innerHTML = '';
         webappsEl.innerHTML = '';
@@ -919,6 +1287,11 @@
       }
     }
 
+    document.addEventListener('click', (event) => {
+      handlePatchClick(event).catch((error) => {
+        setPatchMessage(error.message, true);
+      });
+    });
     refreshBtn.addEventListener('click', loadInventory);
     loadInventory();
     setInterval(loadInventory, 60000);
