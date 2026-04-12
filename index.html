@@ -645,11 +645,12 @@
     function securityStackRow(item) {
       const up = item.reachable === true;
       const chip = up ? 'status-up' : 'status-down';
+      const hostLabel = item.host_fqdn || item.host || '-';
       return `
         <tr>
           <td>${esc(item.name || '-')}</td>
           <td>${esc(item.category || '-')}</td>
-          <td>${esc(item.host || '-')} (${esc(item.ip || '-')})</td>
+          <td>${esc(hostLabel)}</td>
           <td><a href="${esc(item.final_url || item.url || '#')}" target="_blank" rel="noopener">${esc(item.url || '-')}</a></td>
           <td><span class="chip ${chip}">${up ? 'reachable' : 'unreachable'}</span></td>
           <td>${shortNum(item.status || 0)}</td>

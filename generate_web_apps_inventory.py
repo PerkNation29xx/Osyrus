@@ -13,13 +13,40 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import UTC, datetime
 from pathlib import Path
+from urllib.parse import urlsplit, urlunsplit
 
 BASE_DIR = Path(__file__).resolve().parent
 INVENTORY_JSON = BASE_DIR / "inventory.json"
 OUTPUT_JSON = BASE_DIR / "web_apps_inventory.json"
 DISCOVERED_TARGETS = BASE_DIR / "reports" / "discovered_targets.txt"
 
-WEB_PORTS = [80, 81, 443, 8080, 8081, 8090, 8443, 3000, 3001, 5000, 5601, 9000, 9090]
+WEB_PORTS = [80, 81, 443, 8080, 8081, 8090, 8443, 3000, 3001, 3100, 5000, 5601, 9000, 9080, 9090]
+
+# Canonical DNS view for portal display (probe still runs by IP for reliability).
+CANONICAL_DNS_BY_IP: dict[str, str] = {
+    "192.168.12.89": "redapple2.homelab.arpa",
+    "192.168.12.96": "razasubuntu.homelab.arpa",
+    "192.168.12.136": "portal.homelab.arpa",
+    "192.168.12.137": "vcsa70.homelab.arpa",
+    "192.168.12.147": "redapple3.homelab.arpa",
+    "192.168.12.148": "vm1.homelab.arpa",
+    "192.168.12.217": "vm2.homelab.arpa",
+    "192.168.12.236": "ubuntu24-zt-01.homelab.arpa",
+    "192.168.12.240": "osyrus-scan-01.homelab.arpa",
+    "192.168.12.241": "osyrus-wazuh-01.homelab.arpa",
+    "192.168.12.242": "osyrus-opensearch-01.homelab.arpa",
+    "192.168.12.243": "osyrus-shuffle-01.homelab.arpa",
+    "192.168.12.244": "osyrus-ansible-01.homelab.arpa",
+    "192.168.12.245": "osyrus-observability-01.homelab.arpa",
+}
+
+SERVICE_DNS_BY_IP_PORT: dict[tuple[str, int], str] = {
+    ("192.168.12.136", 8090): "portal.homelab.arpa",
+    ("192.168.12.245", 3000): "grafana.homelab.arpa",
+    ("192.168.12.245", 3100): "loki.homelab.arpa",
+    ("192.168.12.245", 9080): "promtail.homelab.arpa",
+    ("192.168.12.245", 9090): "prometheus.homelab.arpa",
+}
 
 
 def load_inventory() -> dict:
@@ -135,6 +162,46 @@ def fetch_url(url: str) -> dict:
         }
 
 
+def normalize_fqdn(name: str) -> str:
+    text = (name or "").strip()
+    if not text:
+        return ""
+    if "." in text:
+        return text.lower()
+    if re.fullmatch(r"[A-Za-z0-9-]+", text):
+        return f"{text.lower()}.homelab.arpa"
+    return ""
+
+
+def display_dns_name(ip: str, port: int, assets: list[dict]) -> str:
+    service_name = SERVICE_DNS_BY_IP_PORT.get((ip, port))
+    if service_name:
+        return service_name
+
+    canonical = CANONICAL_DNS_BY_IP.get(ip)
+    if canonical:
+        return canonical
+
+    for asset in assets:
+        for key in ("name", "host_alias"):
+            fqdn = normalize_fqdn(asset.get(key, ""))
+            if fqdn:
+                return fqdn
+    return ip
+
+
+def rewrite_url_host(url: str, host: str) -> str:
+    if not url:
+        return ""
+    parsed = urlsplit(url)
+    if not parsed.scheme:
+        return url
+    port = f":{parsed.port}" if parsed.port else ""
+    netloc = f"{host}{port}"
+    path = parsed.path or "/"
+    return urlunsplit((parsed.scheme, netloc, path, parsed.query, parsed.fragment))
+
+
 def discover_web_apps(inventory: dict) -> dict:
     ip_assets = build_ip_assets_map(inventory)
     ips = collect_ips(inventory)
@@ -183,19 +250,26 @@ def discover_web_apps(inventory: dict) -> dict:
 
             if best is None:
                 continue
-            url, result = best
+            probe_url, result = best
+            assets = ip_assets.get(ip, [])
+            dns_name = display_dns_name(ip, port_num, assets)
+            url = rewrite_url_host(probe_url, dns_name)
+            final_url = rewrite_url_host(result["final_url"] or probe_url, dns_name)
             apps.append(
                 {
                     "ip": ip,
+                    "dns_name": dns_name,
                     "port": port_num,
                     "url": url,
+                    "probe_url": probe_url,
                     "reachable": result["reachable"],
                     "status": result["status"],
-                    "final_url": result["final_url"],
+                    "final_url": final_url,
+                    "probe_final_url": result["final_url"],
                     "title": result["title"],
                     "server": result["server"],
                     "error": result["error"],
-                    "assets": ip_assets.get(ip, []),
+                    "assets": assets,
                 }
             )
 
