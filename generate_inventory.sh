@@ -198,3 +198,7 @@ jq -s \
   "$HOSTS_JSON" >"$OUT_JSON"
 
 echo "Wrote inventory: $OUT_JSON"
+
+if [[ -n "${DATABASE_URL:-}" && -f "${SCRIPT_DIR}/scripts/db/seed_from_json.js" ]] && command -v node >/dev/null 2>&1; then
+  node "${SCRIPT_DIR}/scripts/db/seed_from_json.js" --dataset inventory --only-if-changed --quiet >/dev/null 2>&1 || true
+fi

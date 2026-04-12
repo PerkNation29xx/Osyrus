@@ -1,5 +1,8 @@
 __pycache__/
 *.pyc
+node_modules/
 logs/
 vuln_scan_*.xml
 vuln_scan_*.txt
+web_ports.grep
+web_ports.xml

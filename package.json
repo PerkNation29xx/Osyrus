@@ -4,7 +4,12 @@
   "private": true,
   "description": "Public VM lab inventory and vulnerability dashboard",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "db:init": "node scripts/db/init_db.js",
+    "db:seed": "node scripts/db/seed_from_json.js"
+  },
+  "dependencies": {
+    "pg": "^8.13.3"
   },
   "engines": {
     "node": ">=20"
