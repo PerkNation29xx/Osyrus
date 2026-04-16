@@ -1,0 +1,397 @@
+{
+  "next_id": 5,
+  "jobs": [
+    {
+      "created_at": "2026-04-12T08:00:45.788Z",
+      "updated_at": "2026-04-12T08:00:45.824Z",
+      "status": "completed",
+      "requested_by": "requester",
+      "approved_by": "approver",
+      "executed_by": "executor",
+      "target_ip": "192.168.12.96",
+      "target_name": "RazasUbuntu",
+      "target_type": "vm_guest",
+      "host_alias": "vm1",
+      "cve_id": "CVE-2023-25690",
+      "request_note": "",
+      "clone_requested": true,
+      "force_without_backup": false,
+      "plan": {
+        "created_at": "2026-04-12T08:00:45.787Z",
+        "policy": {
+          "approval_required": true,
+          "auto_block_without_backup": true,
+          "execution_mode": "dry-run",
+          "ansible_playbook": "ansible/playbooks/osyrus_patch_workflow.yml",
+          "ansible_inventory": "ansible/inventory/hosts.ini"
+        },
+        "summary": {
+          "target_ip": "192.168.12.96",
+          "target_name": "RazasUbuntu",
+          "target_type": "vm_guest",
+          "host_alias": "vm1",
+          "inventory_host_alias": "vm1",
+          "inventory_host_ip": "192.168.12.148",
+          "vm_name": "RazasUbuntu",
+          "ssh_accessible": true,
+          "snapshot_required": true,
+          "clone_requested": true,
+          "clone_enabled": true,
+          "rollback_strategy": "revert_vm_snapshot",
+          "backup_actions": [
+            {
+              "id": "vm_snapshot",
+              "type": "snapshot",
+              "required": true,
+              "description": "Create hypervisor snapshot before patch execution."
+            },
+            {
+              "id": "vm_clone",
+              "type": "clone",
+              "required": false,
+              "description": "Clone VM before patch execution for side-by-side rollback validation."
+            }
+          ],
+          "alert_required": false,
+          "alerts": [],
+          "cve": {
+            "id": "CVE-2023-25690",
+            "score": 9.8,
+            "severity": "critical",
+            "url": "https://vulners.com/cve/CVE-2023-25690"
+          }
+        }
+      },
+      "execution": {
+        "mode": "dry-run",
+        "state": "pending",
+        "started_at": "2026-04-12T08:00:45.820Z",
+        "completed_at": "2026-04-12T08:00:45.824Z",
+        "exit_code": 0,
+        "output": "[INFO] Osyrus patch workflow\n[INFO] Job ID: 1\n[INFO] Target: RazasUbuntu (192.168.12.96) type=vm_guest\n[INFO] Host alias: vm1\n[INFO] CVE: CVE-2023-25690\n[INFO] Snapshot required: true\n[INFO] Clone VM: true\n[INFO] Rollback strategy: revert_vm_snapshot\n[INFO] Mode: dry-run\n[DRY-RUN] Would execute ansible playbook now.\n[DRY-RUN] Playbook: ansible/playbooks/osyrus_patch_workflow.yml\n[DRY-RUN] Inventory: ansible/inventory/hosts.ini\n\n",
+        "command": "bash /Users/nation/Documents/New project/osyrus-portal/scripts/patch/run_ansible_patch.sh",
+        "signal": ""
+      },
+      "last_error": "",
+      "id": 1,
+      "events": []
+    },
+    {
+      "created_at": "2026-04-12T08:01:35.185Z",
+      "updated_at": "2026-04-12T08:01:35.215Z",
+      "status": "completed",
+      "requested_by": "requester",
+      "approved_by": "approver",
+      "executed_by": "executor",
+      "target_ip": "192.168.12.96",
+      "target_name": "RazasUbuntu",
+      "target_type": "vm_guest",
+      "host_alias": "vm1",
+      "cve_id": "CVE-2023-25690",
+      "request_note": "",
+      "clone_requested": true,
+      "force_without_backup": false,
+      "plan": {
+        "created_at": "2026-04-12T08:01:35.184Z",
+        "policy": {
+          "approval_required": true,
+          "auto_block_without_backup": true,
+          "execution_mode": "dry-run",
+          "ansible_playbook": "ansible/playbooks/osyrus_patch_workflow.yml",
+          "ansible_inventory": "ansible/inventory/hosts.ini"
+        },
+        "summary": {
+          "target_ip": "192.168.12.96",
+          "target_name": "RazasUbuntu",
+          "target_type": "vm_guest",
+          "host_alias": "vm1",
+          "inventory_host_alias": "vm1",
+          "inventory_host_ip": "192.168.12.148",
+          "vm_name": "RazasUbuntu",
+          "ssh_accessible": true,
+          "snapshot_required": true,
+          "clone_requested": true,
+          "clone_enabled": true,
+          "rollback_strategy": "revert_vm_snapshot",
+          "backup_actions": [
+            {
+              "id": "vm_snapshot",
+              "type": "snapshot",
+              "required": true,
+              "description": "Create hypervisor snapshot before patch execution."
+            },
+            {
+              "id": "vm_clone",
+              "type": "clone",
+              "required": false,
+              "description": "Clone VM before patch execution for side-by-side rollback validation."
+            }
+          ],
+          "alert_required": false,
+          "alerts": [],
+          "cve": {
+            "id": "CVE-2023-25690",
+            "score": 9.8,
+            "severity": "critical",
+            "url": "https://vulners.com/cve/CVE-2023-25690"
+          }
+        }
+      },
+      "execution": {
+        "mode": "dry-run",
+        "state": "pending",
+        "started_at": "2026-04-12T08:01:35.210Z",
+        "completed_at": "2026-04-12T08:01:35.214Z",
+        "exit_code": 0,
+        "output": "[INFO] Osyrus patch workflow\n[INFO] Job ID: 2\n[INFO] Target: RazasUbuntu (192.168.12.96) type=vm_guest\n[INFO] Host alias: vm1\n[INFO] CVE: CVE-2023-25690\n[INFO] Snapshot required: true\n[INFO] Clone VM: true\n[INFO] Rollback strategy: revert_vm_snapshot\n[INFO] Mode: dry-run\n[DRY-RUN] Would execute ansible playbook now.\n[DRY-RUN] Playbook: ansible/playbooks/osyrus_patch_workflow.yml\n[DRY-RUN] Inventory: ansible/inventory/hosts.ini\n\n",
+        "command": "bash /Users/nation/Documents/New project/osyrus-portal/scripts/patch/run_ansible_patch.sh",
+        "signal": ""
+      },
+      "last_error": "",
+      "id": 2,
+      "events": []
+    },
+    {
+      "created_at": "2026-04-16T05:25:50.154Z",
+      "updated_at": "2026-04-16T05:25:50.154Z",
+      "status": "awaiting_approval",
+      "requested_by": "batch1-prep",
+      "approved_by": "",
+      "executed_by": "",
+      "target_ip": "192.168.12.236",
+      "target_name": "ubuntu24-zt-01",
+      "target_type": "vm_guest",
+      "host_alias": "vm1",
+      "cve_id": "CVE-2024-6387",
+      "request_note": "Batch1 pilot: SSH/OpenSSH risk reduction with snapshot rollback",
+      "clone_requested": false,
+      "force_without_backup": false,
+      "plan": {
+        "created_at": "2026-04-16T05:25:50.153Z",
+        "policy": {
+          "approval_required": true,
+          "auto_block_without_backup": true,
+          "execution_mode": "dry-run",
+          "ansible_playbook": "ansible/playbooks/osyrus_patch_workflow.yml",
+          "ansible_inventory": "ansible/inventory/hosts.ini"
+        },
+        "summary": {
+          "target_ip": "192.168.12.236",
+          "target_name": "ubuntu24-zt-01",
+          "target_type": "vm_guest",
+          "host_alias": "vm1",
+          "inventory_host_alias": "vm1",
+          "inventory_host_ip": "192.168.12.148",
+          "vm_name": "ubuntu24-zt-01",
+          "ssh_accessible": true,
+          "snapshot_required": true,
+          "clone_requested": false,
+          "clone_enabled": false,
+          "rollback_strategy": "revert_vm_snapshot",
+          "backup_actions": [
+            {
+              "id": "vm_snapshot",
+              "type": "snapshot",
+              "required": true,
+              "description": "Create hypervisor snapshot before patch execution."
+            }
+          ],
+          "alert_required": false,
+          "alerts": [],
+          "cve": {
+            "id": "CVE-2024-6387",
+            "score": 8.1,
+            "severity": "high",
+            "url": "https://vulners.com/cve/CVE-2024-6387"
+          }
+        }
+      },
+      "execution": {
+        "mode": "dry-run",
+        "state": "pending"
+      },
+      "last_error": "",
+      "id": 3,
+      "events": []
+    },
+    {
+      "created_at": "2026-04-16T05:25:50.155Z",
+      "updated_at": "2026-04-16T05:25:50.155Z",
+      "status": "awaiting_approval",
+      "requested_by": "batch1-prep",
+      "approved_by": "",
+      "executed_by": "",
+      "target_ip": "192.168.12.240",
+      "target_name": "osyrus-scan-01",
+      "target_type": "vm_guest",
+      "host_alias": "vm1",
+      "cve_id": "CVE-2024-6387",
+      "request_note": "Batch1 pilot: SSH/OpenSSH risk reduction with snapshot rollback",
+      "clone_requested": false,
+      "force_without_backup": false,
+      "plan": {
+        "created_at": "2026-04-16T05:25:50.155Z",
+        "policy": {
+          "approval_required": true,
+          "auto_block_without_backup": true,
+          "execution_mode": "dry-run",
+          "ansible_playbook": "ansible/playbooks/osyrus_patch_workflow.yml",
+          "ansible_inventory": "ansible/inventory/hosts.ini"
+        },
+        "summary": {
+          "target_ip": "192.168.12.240",
+          "target_name": "osyrus-scan-01",
+          "target_type": "vm_guest",
+          "host_alias": "vm1",
+          "inventory_host_alias": "vm1",
+          "inventory_host_ip": "192.168.12.148",
+          "vm_name": "osyrus-scan-01",
+          "ssh_accessible": true,
+          "snapshot_required": true,
+          "clone_requested": false,
+          "clone_enabled": false,
+          "rollback_strategy": "revert_vm_snapshot",
+          "backup_actions": [
+            {
+              "id": "vm_snapshot",
+              "type": "snapshot",
+              "required": true,
+              "description": "Create hypervisor snapshot before patch execution."
+            }
+          ],
+          "alert_required": false,
+          "alerts": [],
+          "cve": {
+            "id": "CVE-2024-6387",
+            "score": 8.1,
+            "severity": "high",
+            "url": "https://vulners.com/cve/CVE-2024-6387"
+          }
+        }
+      },
+      "execution": {
+        "mode": "dry-run",
+        "state": "pending"
+      },
+      "last_error": "",
+      "id": 4,
+      "events": []
+    }
+  ],
+  "events": [
+    {
+      "id": 1,
+      "job_id": 1,
+      "actor": "requester",
+      "event_type": "requested",
+      "details": {
+        "status": "awaiting_approval",
+        "target_ip": "192.168.12.96",
+        "target_name": "RazasUbuntu"
+      },
+      "created_at": "2026-04-12T08:00:45.788Z"
+    },
+    {
+      "id": 2,
+      "job_id": 1,
+      "actor": "approver",
+      "event_type": "approved",
+      "details": {
+        "force_without_backup": false
+      },
+      "created_at": "2026-04-12T08:00:45.806Z"
+    },
+    {
+      "id": 3,
+      "job_id": 1,
+      "actor": "executor",
+      "event_type": "execution_started",
+      "details": {
+        "mode": "dry-run",
+        "ansible_playbook": "ansible/playbooks/osyrus_patch_workflow.yml",
+        "ansible_inventory": "ansible/inventory/hosts.ini"
+      },
+      "created_at": "2026-04-12T08:00:45.820Z"
+    },
+    {
+      "id": 4,
+      "job_id": 1,
+      "actor": "executor",
+      "event_type": "execution_completed",
+      "details": {
+        "exit_code": 0,
+        "signal": ""
+      },
+      "created_at": "2026-04-12T08:00:45.824Z"
+    },
+    {
+      "id": 5,
+      "job_id": 2,
+      "actor": "requester",
+      "event_type": "requested",
+      "details": {
+        "status": "awaiting_approval",
+        "target_ip": "192.168.12.96",
+        "target_name": "RazasUbuntu"
+      },
+      "created_at": "2026-04-12T08:01:35.185Z"
+    },
+    {
+      "id": 6,
+      "job_id": 2,
+      "actor": "approver",
+      "event_type": "approved",
+      "details": {
+        "force_without_backup": false
+      },
+      "created_at": "2026-04-12T08:01:35.197Z"
+    },
+    {
+      "id": 7,
+      "job_id": 2,
+      "actor": "executor",
+      "event_type": "execution_started",
+      "details": {
+        "mode": "dry-run",
+        "ansible_playbook": "ansible/playbooks/osyrus_patch_workflow.yml",
+        "ansible_inventory": "ansible/inventory/hosts.ini"
+      },
+      "created_at": "2026-04-12T08:01:35.211Z"
+    },
+    {
+      "id": 8,
+      "job_id": 2,
+      "actor": "executor",
+      "event_type": "execution_completed",
+      "details": {
+        "exit_code": 0,
+        "signal": ""
+      },
+      "created_at": "2026-04-12T08:01:35.215Z"
+    },
+    {
+      "id": 9,
+      "job_id": 3,
+      "actor": "batch1-prep",
+      "event_type": "requested",
+      "details": {
+        "status": "awaiting_approval",
+        "target_ip": "192.168.12.236",
+        "target_name": "ubuntu24-zt-01"
+      },
+      "created_at": "2026-04-16T05:25:50.155Z"
+    },
+    {
+      "id": 10,
+      "job_id": 4,
+      "actor": "batch1-prep",
+      "event_type": "requested",
+      "details": {
+        "status": "awaiting_approval",
+        "target_ip": "192.168.12.240",
+        "target_name": "osyrus-scan-01"
+      },
+      "created_at": "2026-04-16T05:25:50.155Z"
+    }
+  ]
+}
