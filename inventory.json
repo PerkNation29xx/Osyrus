@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-10T06:44:47Z",
+  "generated_at": "2026-04-22T05:39:14Z",
   "hosts": [
     {
       "alias": "vm1",
@@ -26,8 +26,8 @@
           "type": "VMFS",
           "accessible": true,
           "capacity_gb": 3724,
-          "free_gb": 2847,
-          "used_gb": 876,
+          "free_gb": 2842,
+          "used_gb": 882,
           "free_tb": 2.78
         },
         {
@@ -175,11 +175,11 @@
         },
         {
           "name": "ubuntu24-cloud-base",
-          "power_state": "poweredOff",
+          "power_state": "poweredOn",
           "guest_ip": "",
-          "host_name": "",
+          "host_name": "ubuntu",
           "guest_os": "Ubuntu Linux (64-bit)",
-          "guest_os_version": "",
+          "guest_os_version": "Ubuntu 24.04.4 LTS",
           "num_cpu": 2,
           "memory_gb": 1,
           "template": false,
@@ -238,7 +238,7 @@
         {
           "name": "ubuntu24-cloud-base",
           "guest_os": "Ubuntu Linux (64-bit)",
-          "power_state": "poweredOff",
+          "power_state": "poweredOn",
           "template": false
         }
       ],
@@ -274,8 +274,8 @@
       ],
       "counts": {
         "vm_total": 16,
-        "vm_powered_on": 15,
-        "vm_powered_off": 1,
+        "vm_powered_on": 16,
+        "vm_powered_off": 0,
         "datastore_total": 3,
         "iso_total": 7
       }
@@ -296,15 +296,15 @@
           "type": "VMFS",
           "accessible": true,
           "capacity_gb": 1734,
-          "free_gb": 1674,
-          "used_gb": 60,
-          "free_tb": 1.64
+          "free_gb": 1669,
+          "used_gb": 65,
+          "free_tb": 1.63
         }
       ],
       "vms": [
         {
           "name": "RedAppleVcenter",
-          "power_state": "poweredOn",
+          "power_state": "poweredOff",
           "guest_ip": "",
           "host_name": "",
           "guest_os": "VMware ESXi 8.0 or later",
@@ -313,6 +313,18 @@
           "memory_gb": 8,
           "template": false,
           "vmx_path": "[datastore1] RedAppleVcenter/RedAppleVcenter.vmx"
+        },
+        {
+          "name": "osyrus-fw01",
+          "power_state": "poweredOn",
+          "guest_ip": "192.168.12.1",
+          "host_name": "osyrus-fw01",
+          "guest_os": "Ubuntu Linux (64-bit)",
+          "guest_os_version": "Ubuntu 24.04.4 LTS",
+          "num_cpu": 2,
+          "memory_gb": 4,
+          "template": false,
+          "vmx_path": "[datastore1] osyrus-fw01/osyrus-fw01.vmx"
         }
       ],
       "images": [],
@@ -327,9 +339,9 @@
         }
       ],
       "counts": {
-        "vm_total": 1,
+        "vm_total": 2,
         "vm_powered_on": 1,
-        "vm_powered_off": 0,
+        "vm_powered_off": 1,
         "datastore_total": 1,
         "iso_total": 2
       }

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-09T07:18:25Z",
+  "generated_at": "2026-04-22T05:34:55Z",
   "nodes": [
     {
       "id": "osyrus-scan-01",
@@ -9,11 +9,18 @@
       "role": "primary-vuln-scanner",
       "schedule": "hourly",
       "last_scan_status": "success",
-      "last_target_count": 9,
-      "last_scan_duration_seconds": 102,
-      "last_remediation_percent": 0.0,
-      "last_scan_started": "2026-04-09T07:16:43Z",
-      "last_scan_completed": "2026-04-09T07:18:25Z",
+      "last_target_count": 20,
+      "last_discovered_count": 19,
+      "last_scan_duration_seconds": 225,
+      "last_remediation_percent": 0,
+      "last_scan_started": "2026-04-22T05:31:10Z",
+      "last_scan_completed": "2026-04-22T05:34:55Z",
+      "discovery": {
+        "enabled": true,
+        "cidrs": [
+          "192.168.12.0/24"
+        ]
+      },
       "engines": {
         "nmap": "Nmap version 7.94SVN ( https://nmap.org )",
         "vulners_script_present": true
