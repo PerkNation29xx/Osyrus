@@ -32,5 +32,6 @@ That URL serves:
 - `/vulnerability_report.json`
 - `/VULN_UPGRADE_PATH_PLAN.md`
 - `/inventory.json`
+- `/ha_status.json`
 - `/api/health`
 - `/api/patch/jobs`

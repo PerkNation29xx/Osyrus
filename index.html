@@ -369,6 +369,7 @@
           <a href="app_inventory.json" target="_blank" rel="noopener">App Inventory</a>
           <a href="web_apps_inventory.json" target="_blank" rel="noopener">Web Apps</a>
           <a href="security_stack_inventory.json" target="_blank" rel="noopener">Security Stack</a>
+          <a href="ha_status.json" target="_blank" rel="noopener">Web HA</a>
           <a href="discovered_hosts.json" target="_blank" rel="noopener">Discovered Hosts</a>
           <a href="vulnerability_report.json" target="_blank" rel="noopener">Vulnerability Report</a>
           <a href="VULN_UPGRADE_PATH_PLAN.md" target="_blank" rel="noopener">Upgrade Path Plan</a>
@@ -380,6 +381,7 @@
     </div>
 
     <section class="summary" id="summary"></section>
+    <section id="ha"></section>
     <section id="scanners"></section>
     <section id="patching"></section>
     <section id="securitystack"></section>
@@ -391,6 +393,7 @@
   <script>
     const generatedAtEl = document.getElementById('generatedAt');
     const summaryEl = document.getElementById('summary');
+    const haEl = document.getElementById('ha');
     const scannersEl = document.getElementById('scanners');
     const patchingEl = document.getElementById('patching');
     const securityStackEl = document.getElementById('securitystack');
@@ -426,7 +429,7 @@
       };
     }
 
-    function renderSummary(hosts, vulnSummary, scannerData, webData, discoveredData, securityStackData) {
+    function renderSummary(hosts, vulnSummary, scannerData, webData, discoveredData, securityStackData, haData) {
       const totals = hosts.reduce((acc, host) => {
         const c = host.counts || {};
         acc.hosts += 1;
@@ -483,6 +486,14 @@
           { label: 'Security Up', value: shortNum(securityStackData.reachable_services || 0) }
         );
       }
+      if (haData?.summary) {
+        const haSummary = haData.summary;
+        items.push(
+          { label: 'Web HA', value: haSummary.overall_status || 'unknown' },
+          { label: 'DB Replica Lag', value: `${shortNum(haSummary.db_seconds_behind_master ?? 0)}s` },
+          { label: 'HA Backends OK', value: `${shortNum(haSummary.site_backend_checks_healthy || 0)}/${shortNum(haSummary.site_backend_checks_total || 0)}` }
+        );
+      }
 
       summaryEl.innerHTML = items.map((item) => `
         <article class="card">
@@ -507,6 +518,133 @@
           <td>${esc(vm.guest_os || '-')}</td>
           <td>${esc(osVersion)}</td>
         </tr>
+      `;
+    }
+
+    function statusClass(ok) {
+      return ok ? 'status-up' : 'status-down';
+    }
+
+    function statusText(ok) {
+      return ok ? 'OK' : 'Check';
+    }
+
+    function serviceChips(services) {
+      return Object.entries(services || {}).map(([service, state]) => {
+        const ok = state === 'active';
+        return `<span class="chip ${statusClass(ok)}">${esc(service)} ${esc(state || 'unknown')}</span>`;
+      }).join('');
+    }
+
+    function haNodeRow(node) {
+      const db = node.db || {};
+      const replicaText = node.db_role === 'replica'
+        ? `${db.replication_healthy ? 'healthy' : 'degraded'} • ${shortNum(db.seconds_behind_master ?? -1)}s lag`
+        : `primary ${db.read_only === false ? 'read/write' : 'read-only'}`;
+      return `
+        <tr>
+          <td>${esc(node.name || '-')}</td>
+          <td>${esc(node.ip || '-')}</td>
+          <td>${esc(node.role || '-')}</td>
+          <td><span class="chip ${statusClass(node.vip_owned)}">${node.vip_owned ? 'owns VIP' : 'no VIP'}</span></td>
+          <td><span class="chip ${statusClass(node.services_healthy)}">${statusText(node.services_healthy)}</span></td>
+          <td><div class="chips">${serviceChips(node.services)}</div></td>
+          <td><span class="chip ${statusClass(db.admin_access_verified)}">DB admin ${statusText(db.admin_access_verified)}</span></td>
+          <td>${esc(replicaText)}</td>
+        </tr>
+      `;
+    }
+
+    function haSiteRow(site) {
+      const checks = site.checks || [];
+      const primary = checks.find((check) => check.role === 'primary') || {};
+      const standby = checks.find((check) => check.role === 'standby') || {};
+      const renderCheck = (check) => {
+        const code = check.status_code || 0;
+        const seconds = Number(check.response_seconds || 0).toFixed(2);
+        const text = code ? `${code} • ${seconds}s` : `${esc(check.error || 'failed')} • ${seconds}s`;
+        return `<span class="chip ${statusClass(check.healthy)}">${text}</span>`;
+      };
+      return `
+        <tr>
+          <td>${esc(site.domain || '-')}</td>
+          <td class="mono">${esc(site.backend || '-')} :${esc(site.port || '-')}</td>
+          <td>${renderCheck(primary)}</td>
+          <td>${renderCheck(standby)}</td>
+        </tr>
+      `;
+    }
+
+    function haHttpsRow(check) {
+      const code = check.status_code || 0;
+      return `
+        <tr>
+          <td>${esc(check.domain || '-')}</td>
+          <td>${esc(check.target || '-')}</td>
+          <td>${esc(check.role || '-')}</td>
+          <td><span class="chip ${statusClass(check.healthy)}">${code || esc(check.error || 'failed')}</span></td>
+          <td>${Number(check.response_seconds || 0).toFixed(2)}s</td>
+        </tr>
+      `;
+    }
+
+    function renderHaStatus(haData) {
+      if (!haData?.summary) {
+        haEl.innerHTML = '';
+        return;
+      }
+
+      const summary = haData.summary;
+      const dbLag = `${shortNum(summary.db_seconds_behind_master ?? 0)}s`;
+      const warnings = (summary.cautions || []).map((item) => `<span class="chip">${esc(item)}</span>`).join('');
+      const unhealthyHttps = (haData.haproxy_checks || []).filter((check) => check.healthy !== true);
+      const httpsRows = unhealthyHttps.length
+        ? unhealthyHttps.map(haHttpsRow).join('')
+        : '<tr><td colspan="5">All sampled HAProxy HTTPS checks are healthy.</td></tr>';
+
+      haEl.innerHTML = `
+        <article class="card host">
+          <div class="host-head">
+            <h2 class="host-title">Web HA + DB Replication</h2>
+            <div class="chips">
+              <span class="chip ${statusClass(summary.overall_healthy)}">${esc(summary.overall_status || 'unknown')}</span>
+              <span class="chip">VIP ${esc(summary.vip || '-')}</span>
+              <span class="chip">Active ${esc(summary.active_vip_node || '-')}</span>
+              <span class="chip">DB lag ${esc(dbLag)}</span>
+              <a class="chip" href="http://grafana.homelab.arpa:3000/d/osyrus-web-ha-db/osyrus-web-ha-and-db-replication" target="_blank" rel="noopener">Grafana</a>
+            </div>
+          </div>
+          <div class="host-body">
+            <div class="panel">
+              <h3>HA Nodes</h3>
+              <table>
+                <thead><tr><th>Node</th><th>IP</th><th>Role</th><th>VIP</th><th>Services</th><th>Service Detail</th><th>DB Access</th><th>DB State</th></tr></thead>
+                <tbody>${(haData.nodes || []).map(haNodeRow).join('')}</tbody>
+              </table>
+            </div>
+            <div class="panel">
+              <h3>Backend Readiness</h3>
+              <table>
+                <thead><tr><th>Site</th><th>Backend</th><th>Primary</th><th>Standby</th></tr></thead>
+                <tbody>${(haData.sites || []).map(haSiteRow).join('')}</tbody>
+              </table>
+            </div>
+            <div class="grid-two">
+              <div class="panel">
+                <h3>HTTPS Exceptions</h3>
+                <table>
+                  <thead><tr><th>Site</th><th>Target</th><th>Role</th><th>Status</th><th>Latency</th></tr></thead>
+                  <tbody>${httpsRows}</tbody>
+                </table>
+              </div>
+              <div class="panel">
+                <h3>Failover Notes</h3>
+                <div class="chips" style="padding:0.85rem;">${warnings}</div>
+                <p class="empty">Credentials are verified but not exposed here. DB promotion remains manual to avoid split-brain.</p>
+              </div>
+            </div>
+          </div>
+        </article>
       `;
     }
 
@@ -1208,13 +1346,14 @@
     async function loadInventory() {
       refreshBtn.disabled = true;
       try {
-        const [inventoryResponse, vulnResponse, scannerResponse, webResponse, discoveredResponse, securityStackResponse, patchConfigResponse, patchJobsResponse] = await Promise.all([
+        const [inventoryResponse, vulnResponse, scannerResponse, webResponse, discoveredResponse, securityStackResponse, haResponse, patchConfigResponse, patchJobsResponse] = await Promise.all([
           fetch(`inventory.json?ts=${Date.now()}`),
           fetch(`vulnerability_report.json?ts=${Date.now()}`).catch(() => null),
           fetch(`scanner_nodes.json?ts=${Date.now()}`).catch(() => null),
           fetch(`web_apps_inventory.json?ts=${Date.now()}`).catch(() => null),
           fetch(`discovered_hosts.json?ts=${Date.now()}`).catch(() => null),
           fetch(`security_stack_inventory.json?ts=${Date.now()}`).catch(() => null),
+          fetch(`ha_status.json?ts=${Date.now()}`).catch(() => null),
           fetch(`/api/patch/config?ts=${Date.now()}`).catch(() => null),
           fetch(`/api/patch/jobs?limit=120&ts=${Date.now()}`).catch(() => null)
         ]);
@@ -1229,6 +1368,7 @@
         let webData = null;
         let discoveredData = null;
         let securityStackData = null;
+        let haData = null;
         let patchConfigData = null;
         let patchJobsData = null;
         if (vulnResponse && vulnResponse.ok) {
@@ -1245,6 +1385,9 @@
         }
         if (securityStackResponse && securityStackResponse.ok) {
           securityStackData = await securityStackResponse.json();
+        }
+        if (haResponse && haResponse.ok) {
+          haData = await haResponse.json();
         }
         if (patchConfigResponse && patchConfigResponse.ok) {
           patchConfigData = await patchConfigResponse.json();
@@ -1263,10 +1406,12 @@
         const webText = webData?.generated_at ? ` • Web URLs: ${new Date(webData.generated_at).toLocaleString()}` : '';
         const discoveredText = discoveredData?.generated_at ? ` • Discovery: ${new Date(discoveredData.generated_at).toLocaleString()}` : '';
         const stackText = securityStackData?.generated_at ? ` • Security Stack: ${new Date(securityStackData.generated_at).toLocaleString()}` : '';
+        const haText = haData?.generated_at ? ` • Web HA: ${new Date(haData.generated_at).toLocaleString()}` : '';
         const patchText = patchJobsData?.generated_at ? ` • Patch Jobs: ${new Date(patchJobsData.generated_at).toLocaleString()}` : '';
-        generatedAtEl.textContent = `${invText}${vulnText}${scannerText}${webText}${discoveredText}${stackText}${patchText}`;
+        generatedAtEl.textContent = `${invText}${vulnText}${scannerText}${webText}${discoveredText}${stackText}${haText}${patchText}`;
 
-        renderSummary(data.hosts || [], security?.summary || null, scannerData, webData, discoveredData, securityStackData);
+        renderSummary(data.hosts || [], security?.summary || null, scannerData, webData, discoveredData, securityStackData, haData);
+        renderHaStatus(haData);
         renderScanners(scannerData);
         renderPatching(patchJobsData || { jobs: [] }, patchConfigData || {});
         renderSecurityStack(securityStackData);
@@ -1276,6 +1421,7 @@
       } catch (error) {
         generatedAtEl.textContent = `Inventory load failed: ${error.message}`;
         summaryEl.innerHTML = '';
+        haEl.innerHTML = '';
         scannersEl.innerHTML = '';
         patchingEl.innerHTML = '';
         securityStackEl.innerHTML = '';

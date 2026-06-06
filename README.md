@@ -7,6 +7,7 @@ Single-page dashboard for `vm1` (`192.168.12.148`) and `vm2` (`192.168.12.217`) 
 - ISO images present on each datastore
 - vulnerability profile by host (CVE counts/severity/remediation %)
 - upgrade-path actions per host profile
+- web HA, VIP ownership, and MariaDB primary/replica health
 
 ## Architecture
 - Frontend: `index.html`
@@ -20,6 +21,10 @@ Single-page dashboard for `vm1` (`192.168.12.148`) and `vm2` (`192.168.12.217`) 
 - `run_vulnerability_scan.sh`: runs nmap service scan + CVE enrichment on all host/VM IPs in inventory
 - `generate_vulnerability_report.py`: converts scan XML to `vulnerability_report.json` + `VULN_UPGRADE_PATH_PLAN.md`
 - `generate_web_apps_inventory.py`: discovers reachable HTTP/HTTPS app URLs and writes `web_apps_inventory.json`
+- `scripts/recovery/collect_web_ha_metrics.py`: collects WordPress HA, VIP, service, backend, and MariaDB replication health
+- `ha_status.json`: web HA status displayed in Osyrus and imported as a DB snapshot
+- `scripts/recovery/grafana/osyrus-web-ha-db-dashboard.json`: Grafana dashboard for web HA and DB replication
+- `scripts/recovery/grafana/publish-web-ha-db-dashboard.sh`: publishes the HA dashboard to Grafana
 - `db/schema.sql`: Postgres schema for portal datasets
 - `lib/patch_workflow.js`: patch planning engine (snapshot/rollback decisioning)
 - `lib/patch_store.js`: patch job persistence (DB + file fallback)
@@ -79,6 +84,7 @@ Scanner node artifacts are under `scanner-node/`.
 Portal data file:
 - `scanner_nodes.json` (displayed in Osyrus UI as **Scanning Nodes**)
 - `web_apps_inventory.json` (displayed in Osyrus UI as **Web Application URLs**)
+- `ha_status.json` (displayed in Osyrus UI as **Web HA + DB Replication**)
 
 ## Run Portal
 ```bash

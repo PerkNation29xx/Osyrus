@@ -1,0 +1,653 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-06-06T22:56:50Z",
+  "source": "scripts/recovery/collect_web_ha_metrics.py",
+  "summary": {
+    "overall_status": "degraded",
+    "overall_healthy": false,
+    "vip": "192.168.12.163",
+    "public_ip": "47.51.26.76",
+    "active_vip_node": "neonflux-chat-vm1",
+    "vip_owner_count": 1,
+    "services_healthy": true,
+    "db_primary_read_write": true,
+    "db_replica_read_only": true,
+    "db_replication_healthy": true,
+    "db_seconds_behind_master": 0,
+    "site_backend_checks_total": 24,
+    "site_backend_checks_healthy": 11,
+    "haproxy_checks_total": 18,
+    "haproxy_checks_healthy": 11,
+    "cautions": [
+      "Database promotion is manual by design to avoid split-brain.",
+      "Replica is read-only; write/admin failover requires controlled promotion.",
+      "One or more direct backend site checks failed.",
+      "One or more HAProxy HTTPS checks failed."
+    ]
+  },
+  "topology": {
+    "vip": "192.168.12.163",
+    "public_ip": "47.51.26.76",
+    "model": "active/passive web HA with manual DB promotion",
+    "shared_content": "192.168.12.170:/mac-spark mounted at /srv/neonflux/shared",
+    "primary_node": "192.168.12.161",
+    "standby_node": "192.168.12.162"
+  },
+  "credential_references": {
+    "secrets_included": false,
+    "db_admin_credentials_stored": true,
+    "master_credential_index_stored": true,
+    "ssh_key_registered": true
+  },
+  "grafana": {
+    "dashboard_uid": "osyrus-web-ha-db",
+    "dashboard_url": "http://grafana.homelab.arpa:3000/d/osyrus-web-ha-db/osyrus-web-ha-and-db-replication",
+    "metrics_file": "/Users/nation/homebrew/var/node_exporter/textfile_collector/osyrus_web_ha.prom"
+  },
+  "nodes": [
+    {
+      "name": "neonflux-chat-vm1",
+      "ip": "192.168.12.161",
+      "role": "primary",
+      "db_role": "primary",
+      "reachable": true,
+      "vip_owned": true,
+      "expected_vip_owner": true,
+      "services": {
+        "haproxy": "active",
+        "keepalived": "active",
+        "nginx": "active",
+        "php8.3-fpm": "active",
+        "mariadb": "active"
+      },
+      "services_healthy": true,
+      "db": {
+        "role": "primary",
+        "admin_access_verified": true,
+        "hostname": "neonflux-chat-vm1",
+        "server_id": 161,
+        "read_only": false,
+        "log_bin": true,
+        "error": "",
+        "master_status_accessible": true,
+        "binlog_file": "osyrus-primary-bin.000001",
+        "binlog_position": 37262418,
+        "master_error": ""
+      }
+    },
+    {
+      "name": "neonflux-chat-vm2",
+      "ip": "192.168.12.162",
+      "role": "standby",
+      "db_role": "replica",
+      "reachable": true,
+      "vip_owned": false,
+      "expected_vip_owner": false,
+      "services": {
+        "haproxy": "active",
+        "keepalived": "active",
+        "nginx": "active",
+        "php8.3-fpm": "active",
+        "mariadb": "active"
+      },
+      "services_healthy": true,
+      "db": {
+        "role": "replica",
+        "admin_access_verified": true,
+        "hostname": "neonflux-chat-vm2",
+        "server_id": 162,
+        "read_only": true,
+        "log_bin": true,
+        "error": "",
+        "replication_status_accessible": true,
+        "master_host": "192.168.12.161",
+        "master_server_id": 161,
+        "slave_io_running": true,
+        "slave_sql_running": true,
+        "seconds_behind_master": 0,
+        "read_master_log_pos": 37318649,
+        "exec_master_log_pos": 37318649,
+        "last_io_errno": 0,
+        "last_sql_errno": 0,
+        "last_io_error": "",
+        "last_sql_error": "",
+        "slave_sql_running_state": "Slave has read all relay log; waiting for more updates",
+        "replication_healthy": true,
+        "replication_error": ""
+      }
+    }
+  ],
+  "sites": [
+    {
+      "name": "Medallo Music",
+      "domain": "medallomusic.com",
+      "backend": "be_wp_medallo",
+      "port": 8080,
+      "path": "/",
+      "checks": [
+        {
+          "node": "neonflux-chat-vm1",
+          "ip": "192.168.12.161",
+          "role": "primary",
+          "port": 8080,
+          "healthy": true,
+          "status_code": 301,
+          "response_seconds": 1.091,
+          "error": ""
+        },
+        {
+          "node": "neonflux-chat-vm2",
+          "ip": "192.168.12.162",
+          "role": "standby",
+          "port": 8080,
+          "healthy": true,
+          "status_code": 301,
+          "response_seconds": 3.407,
+          "error": ""
+        }
+      ]
+    },
+    {
+      "name": "The Unity Logistics",
+      "domain": "theunitylogistics.com",
+      "backend": "be_wp_unity",
+      "port": 8081,
+      "path": "/",
+      "checks": [
+        {
+          "node": "neonflux-chat-vm1",
+          "ip": "192.168.12.161",
+          "role": "primary",
+          "port": 8081,
+          "healthy": false,
+          "status_code": 0,
+          "response_seconds": 8.01,
+          "error": "timed out"
+        },
+        {
+          "node": "neonflux-chat-vm2",
+          "ip": "192.168.12.162",
+          "role": "standby",
+          "port": 8081,
+          "healthy": false,
+          "status_code": 502,
+          "response_seconds": 6.677,
+          "error": ""
+        }
+      ]
+    },
+    {
+      "name": "Gilly Loco Distro",
+      "domain": "gillylocodistro.com",
+      "backend": "be_wp_gilly",
+      "port": 8082,
+      "path": "/",
+      "checks": [
+        {
+          "node": "neonflux-chat-vm1",
+          "ip": "192.168.12.161",
+          "role": "primary",
+          "port": 8082,
+          "healthy": false,
+          "status_code": 0,
+          "response_seconds": 8.009,
+          "error": "timed out"
+        },
+        {
+          "node": "neonflux-chat-vm2",
+          "ip": "192.168.12.162",
+          "role": "standby",
+          "port": 8082,
+          "healthy": false,
+          "status_code": 0,
+          "response_seconds": 8.009,
+          "error": "timed out"
+        }
+      ]
+    },
+    {
+      "name": "NeonFlux",
+      "domain": "neonflux.co",
+      "backend": "be_wp_neonflux",
+      "port": 8083,
+      "path": "/",
+      "checks": [
+        {
+          "node": "neonflux-chat-vm1",
+          "ip": "192.168.12.161",
+          "role": "primary",
+          "port": 8083,
+          "healthy": true,
+          "status_code": 301,
+          "response_seconds": 4.038,
+          "error": ""
+        },
+        {
+          "node": "neonflux-chat-vm2",
+          "ip": "192.168.12.162",
+          "role": "standby",
+          "port": 8083,
+          "healthy": false,
+          "status_code": 0,
+          "response_seconds": 8.008,
+          "error": "timed out"
+        }
+      ]
+    },
+    {
+      "name": "Cheros de la Selecta",
+      "domain": "cherosdelaselecta.com",
+      "backend": "be_wp_cheros",
+      "port": 8084,
+      "path": "/",
+      "checks": [
+        {
+          "node": "neonflux-chat-vm1",
+          "ip": "192.168.12.161",
+          "role": "primary",
+          "port": 8084,
+          "healthy": true,
+          "status_code": 301,
+          "response_seconds": 7.619,
+          "error": ""
+        },
+        {
+          "node": "neonflux-chat-vm2",
+          "ip": "192.168.12.162",
+          "role": "standby",
+          "port": 8084,
+          "healthy": false,
+          "status_code": 0,
+          "response_seconds": 8.008,
+          "error": "timed out"
+        }
+      ]
+    },
+    {
+      "name": "La Selecta Fan Club",
+      "domain": "laselectafanclub.cannacoin.website",
+      "backend": "be_wp_cheros",
+      "port": 8084,
+      "path": "/",
+      "checks": [
+        {
+          "node": "neonflux-chat-vm1",
+          "ip": "192.168.12.161",
+          "role": "primary",
+          "port": 8084,
+          "healthy": false,
+          "status_code": 0,
+          "response_seconds": 8.008,
+          "error": "timed out"
+        },
+        {
+          "node": "neonflux-chat-vm2",
+          "ip": "192.168.12.162",
+          "role": "standby",
+          "port": 8084,
+          "healthy": false,
+          "status_code": 0,
+          "response_seconds": 8.008,
+          "error": "timed out"
+        }
+      ]
+    },
+    {
+      "name": "Miguel Huertas",
+      "domain": "miguelhuertas.com",
+      "backend": "be_wp_miguel",
+      "port": 8085,
+      "path": "/",
+      "checks": [
+        {
+          "node": "neonflux-chat-vm1",
+          "ip": "192.168.12.161",
+          "role": "primary",
+          "port": 8085,
+          "healthy": false,
+          "status_code": 0,
+          "response_seconds": 8.002,
+          "error": "timed out"
+        },
+        {
+          "node": "neonflux-chat-vm2",
+          "ip": "192.168.12.162",
+          "role": "standby",
+          "port": 8085,
+          "healthy": false,
+          "status_code": 0,
+          "response_seconds": 8.002,
+          "error": "timed out"
+        }
+      ]
+    },
+    {
+      "name": "CannaCoin",
+      "domain": "cannacoin.website",
+      "backend": "be_wp_cannacoin",
+      "port": 8086,
+      "path": "/",
+      "checks": [
+        {
+          "node": "neonflux-chat-vm1",
+          "ip": "192.168.12.161",
+          "role": "primary",
+          "port": 8086,
+          "healthy": false,
+          "status_code": 0,
+          "response_seconds": 8.002,
+          "error": "timed out"
+        },
+        {
+          "node": "neonflux-chat-vm2",
+          "ip": "192.168.12.162",
+          "role": "standby",
+          "port": 8086,
+          "healthy": true,
+          "status_code": 301,
+          "response_seconds": 6.396,
+          "error": ""
+        }
+      ]
+    },
+    {
+      "name": "Carlos Yorvick",
+      "domain": "carlosyorvick.com",
+      "backend": "be_wp_carlos",
+      "port": 8087,
+      "path": "/",
+      "checks": [
+        {
+          "node": "neonflux-chat-vm1",
+          "ip": "192.168.12.161",
+          "role": "primary",
+          "port": 8087,
+          "healthy": false,
+          "status_code": 0,
+          "response_seconds": 8.002,
+          "error": "timed out"
+        },
+        {
+          "node": "neonflux-chat-vm2",
+          "ip": "192.168.12.162",
+          "role": "standby",
+          "port": 8087,
+          "healthy": false,
+          "status_code": 0,
+          "response_seconds": 8.003,
+          "error": "timed out"
+        }
+      ]
+    },
+    {
+      "name": "Asset Reduction",
+      "domain": "assetreduction.com",
+      "backend": "be_wp_assetreduction",
+      "port": 8088,
+      "path": "/",
+      "checks": [
+        {
+          "node": "neonflux-chat-vm1",
+          "ip": "192.168.12.161",
+          "role": "primary",
+          "port": 8088,
+          "healthy": true,
+          "status_code": 301,
+          "response_seconds": 5.388,
+          "error": ""
+        },
+        {
+          "node": "neonflux-chat-vm2",
+          "ip": "192.168.12.162",
+          "role": "standby",
+          "port": 8088,
+          "healthy": true,
+          "status_code": 301,
+          "response_seconds": 3.685,
+          "error": ""
+        }
+      ]
+    },
+    {
+      "name": "CannaTek",
+      "domain": "cannatek.co",
+      "backend": "be_mars",
+      "port": 8089,
+      "path": "/",
+      "checks": [
+        {
+          "node": "neonflux-chat-vm1",
+          "ip": "192.168.12.161",
+          "role": "primary",
+          "port": 8089,
+          "healthy": true,
+          "status_code": 200,
+          "response_seconds": 0.002,
+          "error": ""
+        },
+        {
+          "node": "neonflux-chat-vm2",
+          "ip": "192.168.12.162",
+          "role": "standby",
+          "port": 8089,
+          "healthy": true,
+          "status_code": 200,
+          "response_seconds": 0.003,
+          "error": ""
+        }
+      ]
+    },
+    {
+      "name": "Mars Hub",
+      "domain": "mars.neonflux.co",
+      "backend": "be_marshub",
+      "port": 8090,
+      "path": "/",
+      "checks": [
+        {
+          "node": "neonflux-chat-vm1",
+          "ip": "192.168.12.161",
+          "role": "primary",
+          "port": 8090,
+          "healthy": true,
+          "status_code": 200,
+          "response_seconds": 0.002,
+          "error": ""
+        },
+        {
+          "node": "neonflux-chat-vm2",
+          "ip": "192.168.12.162",
+          "role": "standby",
+          "port": 8090,
+          "healthy": true,
+          "status_code": 200,
+          "response_seconds": 0.002,
+          "error": ""
+        }
+      ]
+    }
+  ],
+  "haproxy_checks": [
+    {
+      "domain": "assetreduction.com",
+      "target": "neonflux-chat-vm1",
+      "ip": "192.168.12.161",
+      "role": "primary",
+      "healthy": false,
+      "status_code": 0,
+      "response_seconds": 8.022,
+      "error": "The read operation timed out"
+    },
+    {
+      "domain": "assetreduction.com",
+      "target": "neonflux-chat-vm2",
+      "ip": "192.168.12.162",
+      "role": "standby",
+      "healthy": true,
+      "status_code": 200,
+      "response_seconds": 5.389,
+      "error": ""
+    },
+    {
+      "domain": "assetreduction.com",
+      "target": "wordpress-vip",
+      "ip": "192.168.12.163",
+      "role": "vip",
+      "healthy": true,
+      "status_code": 200,
+      "response_seconds": 6.564,
+      "error": ""
+    },
+    {
+      "domain": "cannatek.co",
+      "target": "neonflux-chat-vm1",
+      "ip": "192.168.12.161",
+      "role": "primary",
+      "healthy": true,
+      "status_code": 200,
+      "response_seconds": 0.006,
+      "error": ""
+    },
+    {
+      "domain": "cannatek.co",
+      "target": "neonflux-chat-vm2",
+      "ip": "192.168.12.162",
+      "role": "standby",
+      "healthy": true,
+      "status_code": 200,
+      "response_seconds": 0.006,
+      "error": ""
+    },
+    {
+      "domain": "cannatek.co",
+      "target": "wordpress-vip",
+      "ip": "192.168.12.163",
+      "role": "vip",
+      "healthy": true,
+      "status_code": 200,
+      "response_seconds": 0.006,
+      "error": ""
+    },
+    {
+      "domain": "mars.neonflux.co",
+      "target": "neonflux-chat-vm1",
+      "ip": "192.168.12.161",
+      "role": "primary",
+      "healthy": true,
+      "status_code": 200,
+      "response_seconds": 0.006,
+      "error": ""
+    },
+    {
+      "domain": "mars.neonflux.co",
+      "target": "neonflux-chat-vm2",
+      "ip": "192.168.12.162",
+      "role": "standby",
+      "healthy": true,
+      "status_code": 200,
+      "response_seconds": 0.006,
+      "error": ""
+    },
+    {
+      "domain": "mars.neonflux.co",
+      "target": "wordpress-vip",
+      "ip": "192.168.12.163",
+      "role": "vip",
+      "healthy": true,
+      "status_code": 200,
+      "response_seconds": 0.005,
+      "error": ""
+    },
+    {
+      "domain": "medallomusic.com",
+      "target": "neonflux-chat-vm1",
+      "ip": "192.168.12.161",
+      "role": "primary",
+      "healthy": true,
+      "status_code": 200,
+      "response_seconds": 4.705,
+      "error": ""
+    },
+    {
+      "domain": "medallomusic.com",
+      "target": "neonflux-chat-vm2",
+      "ip": "192.168.12.162",
+      "role": "standby",
+      "healthy": true,
+      "status_code": 200,
+      "response_seconds": 5.19,
+      "error": ""
+    },
+    {
+      "domain": "medallomusic.com",
+      "target": "wordpress-vip",
+      "ip": "192.168.12.163",
+      "role": "vip",
+      "healthy": false,
+      "status_code": 0,
+      "response_seconds": 8.023,
+      "error": "The read operation timed out"
+    },
+    {
+      "domain": "neonflux.co",
+      "target": "neonflux-chat-vm1",
+      "ip": "192.168.12.161",
+      "role": "primary",
+      "healthy": false,
+      "status_code": 0,
+      "response_seconds": 8.023,
+      "error": "The read operation timed out"
+    },
+    {
+      "domain": "neonflux.co",
+      "target": "neonflux-chat-vm2",
+      "ip": "192.168.12.162",
+      "role": "standby",
+      "healthy": false,
+      "status_code": 0,
+      "response_seconds": 8.023,
+      "error": "The read operation timed out"
+    },
+    {
+      "domain": "neonflux.co",
+      "target": "wordpress-vip",
+      "ip": "192.168.12.163",
+      "role": "vip",
+      "healthy": true,
+      "status_code": 200,
+      "response_seconds": 7.821,
+      "error": ""
+    },
+    {
+      "domain": "theunitylogistics.com",
+      "target": "neonflux-chat-vm1",
+      "ip": "192.168.12.161",
+      "role": "primary",
+      "healthy": false,
+      "status_code": 0,
+      "response_seconds": 8.022,
+      "error": "The read operation timed out"
+    },
+    {
+      "domain": "theunitylogistics.com",
+      "target": "neonflux-chat-vm2",
+      "ip": "192.168.12.162",
+      "role": "standby",
+      "healthy": false,
+      "status_code": 0,
+      "response_seconds": 8.023,
+      "error": "The read operation timed out"
+    },
+    {
+      "domain": "theunitylogistics.com",
+      "target": "wordpress-vip",
+      "ip": "192.168.12.163",
+      "role": "vip",
+      "healthy": false,
+      "status_code": 0,
+      "response_seconds": 8.023,
+      "error": "The read operation timed out"
+    }
+  ],
+  "errors": []
+}
