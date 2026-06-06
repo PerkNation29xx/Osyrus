@@ -86,6 +86,13 @@ Portal data file:
 - `web_apps_inventory.json` (displayed in Osyrus UI as **Web Application URLs**)
 - `ha_status.json` (displayed in Osyrus UI as **Web HA + DB Replication**)
 
+Optional live portal ingest:
+```bash
+export WEB_HA_PORTAL_INGEST_URL='https://osyrus-public-portal.onrender.com/api/datasets/ha_status'
+export WEB_HA_PORTAL_INGEST_TOKEN='set-this-in-render-too'
+python3 scripts/recovery/collect_web_ha_metrics.py
+```
+
 ## Run Portal
 ```bash
 cd "/Users/nation/Documents/New project/osyrus-portal"

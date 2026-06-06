@@ -2,9 +2,9 @@ const fs = require("node:fs");
 const path = require("node:path");
 const http = require("node:http");
 
-const { ROUTE_TO_DATASET } = require("./lib/datasets");
+const { ROUTE_TO_DATASET, NAME_TO_DATASET } = require("./lib/datasets");
 const { hasDatabase, query } = require("./lib/db");
-const { resolveDatasetPayload } = require("./lib/snapshot_store");
+const { resolveDatasetPayload, upsertSnapshot } = require("./lib/snapshot_store");
 const { buildPatchPlan } = require("./lib/patch_workflow");
 const { createPatchStore } = require("./lib/patch_store");
 const { startPatchExecution } = require("./lib/patch_executor");
@@ -124,6 +124,36 @@ function authorizePatchMutation(req, role) {
       ok: false,
       statusCode: 403,
       message: `Forbidden: invalid token for patch ${role} action`,
+    };
+  }
+  return {
+    ok: true,
+    statusCode: 200,
+    message: "authorized",
+  };
+}
+
+function getDatasetIngestToken() {
+  return process.env.OSYRUS_DATASET_INGEST_TOKEN
+    || process.env.OSYRUS_PORTAL_INGEST_TOKEN
+    || "";
+}
+
+function authorizeDatasetIngest(req) {
+  const expectedToken = getDatasetIngestToken();
+  if (!expectedToken) {
+    return {
+      ok: false,
+      statusCode: 503,
+      message: "Dataset ingest token is not configured on server",
+    };
+  }
+  const providedToken = getProvidedToken(req);
+  if (!providedToken || providedToken !== expectedToken) {
+    return {
+      ok: false,
+      statusCode: 403,
+      message: "Forbidden: invalid token for dataset ingest",
     };
   }
   return {
@@ -395,6 +425,7 @@ async function maybeServeHealth(pathname, method, res) {
       approve: Boolean(getPatchConfiguredToken("approve")),
       execute: Boolean(getPatchConfiguredToken("execute")),
     },
+    dataset_ingest_token_configured: Boolean(getDatasetIngestToken()),
     timestamp: new Date().toISOString(),
   };
 
@@ -404,6 +435,71 @@ async function maybeServeHealth(pathname, method, res) {
   }
 
   send(res, statusCode, `${JSON.stringify(payload, null, 2)}\n`, contentTypes[".json"]);
+  return true;
+}
+
+async function maybeServeDatasetIngestApi(req, pathname, method, res) {
+  const match = pathname.match(/^\/api\/datasets\/([a-zA-Z0-9_-]+)$/);
+  if (!match) {
+    return false;
+  }
+
+  if (method !== "POST") {
+    send(res, 405, "Method Not Allowed");
+    return true;
+  }
+
+  const datasetName = match[1];
+  const dataset = NAME_TO_DATASET.get(datasetName);
+  if (!dataset) {
+    sendJson(res, 404, { error: `Unknown dataset: ${datasetName}` });
+    return true;
+  }
+
+  const auth = authorizeDatasetIngest(req);
+  if (!auth.ok) {
+    sendJson(res, auth.statusCode, { error: auth.message });
+    return true;
+  }
+
+  const payload = await readJsonBody(req);
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    sendJson(res, 400, { error: "Dataset payload must be a JSON object" });
+    return true;
+  }
+
+  if (hasDatabase()) {
+    const result = await upsertSnapshot({
+      datasetName,
+      payload,
+      source: "api-ingest",
+      schemaVersion: Number(payload.schema_version || 1),
+    });
+    sendJson(res, 202, {
+      dataset: datasetName,
+      stored: "database",
+      inserted: result.inserted,
+      generated_at: result.generatedAt,
+      payload_sha256: result.payloadSha256,
+    });
+    return true;
+  }
+
+  const allowFileIngest = ["1", "true", "yes", "on"].includes(String(process.env.PORTAL_FILE_INGEST || "").toLowerCase());
+  if (!allowFileIngest) {
+    sendJson(res, 503, {
+      error: "DATABASE_URL is not configured and PORTAL_FILE_INGEST is not enabled",
+    });
+    return true;
+  }
+
+  const filePath = path.join(rootDir, dataset.file);
+  await fs.promises.writeFile(filePath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  sendJson(res, 202, {
+    dataset: datasetName,
+    stored: "file",
+    file: dataset.file,
+  });
   return true;
 }
 
@@ -481,6 +577,10 @@ async function handleRequest(req, res) {
   const pathname = decodeURIComponent(parsed.pathname);
 
   if (await maybeServePatchApi(req, parsed, pathname, method, res)) {
+    return;
+  }
+
+  if (await maybeServeDatasetIngestApi(req, pathname, method, res)) {
     return;
   }
 

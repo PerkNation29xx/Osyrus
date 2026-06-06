@@ -18,6 +18,9 @@ This portal directory is now Render-ready.
 - `DATABASE_URL` (Supabase or Postgres connection string)
 - `DATABASE_SSL=require` (required for Supabase)
 - Optional: `PORTAL_DB_REQUIRED=true`, `PORTAL_DB_AUTO_IMPORT=true`
+- Dataset ingest for live health updates:
+- `OSYRUS_DATASET_INGEST_TOKEN` or `OSYRUS_PORTAL_INGEST_TOKEN`
+- Local collectors should post to `https://<render-host>/api/datasets/ha_status` with `Authorization: Bearer <token>`
 - Patch workflow (recommended):
 - `OSYRUS_PATCH_TOKEN` or role tokens (`OSYRUS_PATCH_REQUEST_TOKEN`, `OSYRUS_PATCH_APPROVE_TOKEN`, `OSYRUS_PATCH_EXECUTE_TOKEN`)
 - `OSYRUS_PATCH_EXECUTION_MODE=dry-run` initially, then `live` after testing
@@ -34,4 +37,5 @@ That URL serves:
 - `/inventory.json`
 - `/ha_status.json`
 - `/api/health`
+- `/api/datasets/ha_status` -> protected POST ingest for DB-backed live HA status
 - `/api/patch/jobs`

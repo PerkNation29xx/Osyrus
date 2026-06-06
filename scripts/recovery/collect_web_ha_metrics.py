@@ -16,6 +16,8 @@ import socket
 import ssl
 import subprocess
 import time
+import urllib.error
+import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -95,6 +97,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--ssh-key", default=os.environ.get("WEB_HA_SSH_KEY", str(DEFAULT_SSH_KEY)))
     parser.add_argument("--timeout", type=float, default=float(os.environ.get("WEB_HA_TIMEOUT_SEC", DEFAULT_TIMEOUT)))
     parser.add_argument("--workers", type=int, default=int(os.environ.get("WEB_HA_WORKERS", DEFAULT_WORKERS)))
+    parser.add_argument("--portal-ingest-url", default=os.environ.get("WEB_HA_PORTAL_INGEST_URL", os.environ.get("OSYRUS_PORTAL_INGEST_URL", "")))
+    parser.add_argument("--portal-ingest-token", default=os.environ.get("WEB_HA_PORTAL_INGEST_TOKEN", os.environ.get("OSYRUS_PORTAL_INGEST_TOKEN", os.environ.get("OSYRUS_DATASET_INGEST_TOKEN", ""))))
     parser.add_argument("--skip-site-checks", action="store_true", default=os.environ.get("WEB_HA_SKIP_SITE_CHECKS", "").lower() in {"1", "true", "yes"})
     return parser.parse_args()
 
@@ -420,6 +424,7 @@ def bool_metric(value: Any) -> int:
 
 def build_metrics(payload: dict[str, Any], collect_success: int) -> list[str]:
     summary = payload.get("summary", {})
+    remote_publish = payload.get("remote_publish", {})
     lines = [
         "# HELP osyrus_web_ha_collect_success Whether the HA collector completed successfully.",
         "# TYPE osyrus_web_ha_collect_success gauge",
@@ -445,6 +450,12 @@ def build_metrics(payload: dict[str, Any], collect_success: int) -> list[str]:
         "# HELP osyrus_web_ha_haproxy_checks_healthy Healthy HTTPS HAProxy checks.",
         "# TYPE osyrus_web_ha_haproxy_checks_healthy gauge",
         metric_line("osyrus_web_ha_haproxy_checks_healthy", int(summary.get("haproxy_checks_healthy", 0))),
+        "# HELP osyrus_web_ha_remote_ingest_configured Whether remote portal ingest is configured for this collector.",
+        "# TYPE osyrus_web_ha_remote_ingest_configured gauge",
+        metric_line("osyrus_web_ha_remote_ingest_configured", bool_metric(remote_publish.get("configured"))),
+        "# HELP osyrus_web_ha_remote_ingest_success Whether the last remote portal ingest succeeded.",
+        "# TYPE osyrus_web_ha_remote_ingest_success gauge",
+        metric_line("osyrus_web_ha_remote_ingest_success", bool_metric(remote_publish.get("ok"))),
         "# HELP osyrus_web_ha_node_reachable SSH/systemd reachability by node.",
         "# TYPE osyrus_web_ha_node_reachable gauge",
     ]
@@ -515,6 +526,52 @@ def atomic_write_text(path: Path, text: str) -> None:
     tmp_path.replace(path)
 
 
+def publish_to_portal(payload: dict[str, Any], url: str, token: str, timeout: float) -> dict[str, Any]:
+    if not url or not token:
+        return {
+            "configured": False,
+            "ok": False,
+            "status_code": 0,
+            "message": "remote ingest not configured",
+        }
+
+    body = json.dumps(payload).encode("utf-8")
+    request = urllib.request.Request(
+        url,
+        data=body,
+        method="POST",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "User-Agent": "osyrus-ha-monitor/1.0",
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            response_body = response.read(4096).decode("utf-8", errors="replace")
+            return {
+                "configured": True,
+                "ok": 200 <= int(response.status) < 300,
+                "status_code": int(response.status),
+                "message": response_body[:500],
+            }
+    except urllib.error.HTTPError as error:
+        response_body = error.read(4096).decode("utf-8", errors="replace")
+        return {
+            "configured": True,
+            "ok": False,
+            "status_code": int(error.code),
+            "message": response_body[:500],
+        }
+    except (urllib.error.URLError, TimeoutError, OSError) as error:
+        return {
+            "configured": True,
+            "ok": False,
+            "status_code": 0,
+            "message": str(error)[:500],
+        }
+
+
 def main() -> int:
     args = parse_args()
     ssh_key = Path(args.ssh_key).expanduser()
@@ -573,6 +630,11 @@ def main() -> int:
         "haproxy_checks": haproxy_checks,
         "errors": errors,
     }
+
+    remote_publish = publish_to_portal(payload, args.portal_ingest_url.strip(), args.portal_ingest_token.strip(), timeout)
+    payload["remote_publish"] = remote_publish
+    if remote_publish["configured"] and not remote_publish["ok"]:
+        errors.append(f"remote ingest failed: {remote_publish['status_code']} {remote_publish['message']}")
 
     metrics = build_metrics(payload, collect_success)
     atomic_write_text(json_out, json.dumps(payload, indent=2) + "\n")
